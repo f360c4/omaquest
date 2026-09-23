@@ -1218,9 +1218,32 @@ Item {
     return lines.join("\n")
   }
 
-  function askTheBard() {
-    if (!root.bardEnabled || !root.bardAvailable || !root.hasHero || root.bardUsedToday) return
+  // As often as asked.
+  //
+  // It used to refuse a second time in a day, to be careful with somebody
+  // else's tokens. That is not carefulness, it is deciding for them: it is
+  // their agent, their quota, and their explicit click each time. What is left
+  // is a minute's guard against a double-click, which is a debounce rather
+  // than a rule.
+  // Held as a property with a timer behind it rather than as a clock
+  // comparison, because a binding that reads the time never re-runs when the
+  // time passes: the button would go grey on the click and stay grey until
+  // something unrelated happened to touch it.
+  property bool bardCooling: false
 
+  Timer {
+    interval: 60000
+    repeat: false
+    running: root.bardCooling
+    onTriggered: root.bardCooling = false
+  }
+
+  readonly property bool canAskBard: bardEnabled && bardAvailable && hasHero && !bardCooling
+
+  function askTheBard() {
+    if (!canAskBard) return
+
+    root.bardCooling = true
     bardBriefFile.setText(bardBrief())
     bardLaunch.restart()
   }

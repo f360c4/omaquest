@@ -67,28 +67,19 @@ Item {
     // ---- The Bard. One button, at most once a day, and only if it was
     //      switched on and `omarchy` is actually installed. The song itself
     //      appears under its own day below, and stays there.
+    // Always there while the Bard is on. The label says which it is, and a
+    // song already written means asking again replaces it rather than being
+    // refused.
     Button {
-      visible: root.bardShown && root.bardText.length === 0
-      text: root.t("bard.ask")
+      visible: root.bardShown
+      text: root.bardText.length > 0 ? root.t("bard.again") : root.t("bard.ask")
       foreground: root.foreground
       fontFamily: root.fontFamily
       fontSize: Style.font.bodySmall
       bordered: true
+      enabled: !!root.game && root.game.canAskBard
+      opacity: enabled ? 1 : 0.45
       onClicked: if (root.game) root.game.askTheBard()
-    }
-
-    // Said, rather than leaving a button to disappear and nobody to know
-    // whether it worked or the feature broke.
-    Text {
-      width: parent.width
-      visible: root.bardShown && root.bardText.length > 0
-      wrapMode: Text.WordWrap
-      textFormat: Text.PlainText
-      text: root.t("bard.asked")
-      color: Qt.darker(root.foreground, 1.7)
-      font.family: root.fontFamily
-      font.pixelSize: Style.font.caption
-      renderType: Text.NativeRendering
     }
 
     Text {

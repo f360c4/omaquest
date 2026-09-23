@@ -300,7 +300,7 @@
   "settings.sensorGit": "Commits in ~/Work",
   "settings.sensorGit_note": "Counts commits with git rev-list, every half hour, in the folder below. Never a message, a file name, an author, or the name of a repository.",
   "settings.bard": "The Bard",
-  "settings.bard_note": "Adds one button to the Chronicle that launches your own Omarchy agent to write today up. Your agent, your quota, once a day, and nothing runs without the click.",
+  "settings.bard_note": "Adds one button to the Chronicle that launches your own Omarchy agent to write the day up. Your agent, your quota, as often as you ask, and nothing runs without the click.",
   "settings.realm_name": "The realm's name",
   "settings.rename": "Rename",
   "settings.calling": "Calling",
@@ -316,8 +316,7 @@
   "chron.reborn.1": "The records stay. Everything else starts over: {name}, {race} {cls}.",
   "bard.title": "The Bard's Song",
   "bard.ask": "Ask the Bard",
-  "bard.asked": "The Bard has already sung today. Their song is below, under today.",
-  "bard.prompt": "Read the short text file {brief} and nothing else. Write about 150 words in {language}, in the voice of a medieval bard who was there, about the most recent day it describes. Use the hero's name and the realm's name. Prefer the shape of the day to a list of events. Save it as plain prose to {out}. Do not open any other file, do not run any other command, and do not report anything back.",
+  "bard.prompt": "Read the short text file {brief} and nothing else. Write about 150 words in {language}, in the voice of a medieval bard who was there, about the most recent day it describes. Use the hero's name and the realm's name. Prefer the shape of the day to a list of events. Save it as plain prose to {out}, replacing whatever is there. Do not open any other file, do not run any other command, and do not report anything back.",
   "class.archer.name": "Archer",
   "class.archer.bonus": "Exploration and Combat ×1.25 · Volley: two arrows, armour pays twice",
   "skill.volley.name": "Volley",
@@ -401,5 +400,6 @@
   "settings.gitPath": "Where your repositories are — searched one level deep, and only for .git folders",
   "arena.lost_xp": "-{xp} experience",
   "arena.lost_kept": "Your level, your gold, your gear and your feats are untouched. Only the climb toward this level got shorter.",
-  "arena.loot_xp": "+{xp} experience"
+  "arena.loot_xp": "+{xp} experience",
+  "bard.again": "Ask again"
 }

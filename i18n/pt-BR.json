@@ -300,7 +300,7 @@
   "settings.sensorGit": "Commits em ~/Work",
   "settings.sensorGit_note": "Conta commits com git rev-list, a cada meia hora, na pasta abaixo. Nunca uma mensagem, um nome de arquivo, um autor, ou o nome de um repositório.",
   "settings.bard": "O Bardo",
-  "settings.bard_note": "Põe um botão na Crônica que chama o seu agente do Omarchy para escrever o dia. Seu agente, sua cota, uma vez por dia, e nada roda sem o clique.",
+  "settings.bard_note": "Põe um botão na Crônica que chama o seu agente do Omarchy para escrever o dia. Seu agente, sua cota, quantas vezes você quiser, e nada roda sem o clique.",
   "settings.realm_name": "O nome do reino",
   "settings.rename": "Renomear",
   "settings.calling": "Chamado",
@@ -316,8 +316,7 @@
   "chron.reborn.1": "Os registros ficam. Todo o resto começa de novo: {name}, {race} {cls}.",
   "bard.title": "A Canção do Bardo",
   "bard.ask": "Consultar o Bardo",
-  "bard.asked": "O Bardo já cantou hoje. A canção dele está aí embaixo, sob o dia de hoje.",
-  "bard.prompt": "Leia o arquivo de texto curto {brief} e nada mais. Escreva cerca de 150 palavras em {language}, na voz de um bardo medieval que estava lá, sobre o dia mais recente que ele descreve. Use o nome do herói e o nome do reino. Prefira o formato do dia a uma lista de eventos. Salve como prosa simples em {out}. Não abra nenhum outro arquivo, não rode nenhum outro comando, e não reporte nada de volta.",
+  "bard.prompt": "Leia o arquivo de texto curto {brief} e nada mais. Escreva cerca de 150 palavras em {language}, na voz de um bardo medieval que estava lá, sobre o dia mais recente que ele descreve. Use o nome do herói e o nome do reino. Prefira o formato do dia a uma lista de eventos. Salve como prosa simples em {out}, substituindo o que estiver lá. Não abra nenhum outro arquivo, não rode nenhum outro comando, e não reporte nada de volta.",
   "class.archer.name": "Arqueiro",
   "class.archer.bonus": "Exploração e Combate ×1,25 · Saraivada: duas flechas, a armadura conta duas vezes",
   "skill.volley.name": "Saraivada",
@@ -401,5 +400,6 @@
   "settings.gitPath": "Onde ficam seus repositórios — procurado um nível abaixo, e só por pastas .git",
   "arena.lost_xp": "-{xp} de experiência",
   "arena.lost_kept": "Seu nível, seu ouro, seu equipamento e seus feitos estão intactos. Só a subida para este nível ficou mais curta.",
-  "arena.loot_xp": "+{xp} de experiência"
+  "arena.loot_xp": "+{xp} de experiência",
+  "bard.again": "Consultar de novo"
 }

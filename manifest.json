@@ -120,7 +120,7 @@
         "type": "boolean",
         "label": "The Bard (AI chronicle, on click only)",
         "defaultValue": false,
-        "description": "Adds a button that launches your default Omarchy agent to write today's chronicle. Uses your own agent and your own quota; nothing runs without the click."
+        "description": "Adds a button that launches your default Omarchy agent to write today's chronicle. Uses your own agent and your own quota, as often as you ask; nothing runs without the click."
       }
     ]
   }

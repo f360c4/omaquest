@@ -110,7 +110,7 @@ shell, never a string concatenated from anything.**
 | `omarchy agent usage-update`, then `ls -l --time-style=+%s <agents/usage>`, then `head -c 65536 <file>` | Every 15 minutes, **only if you switch the agent sensor on**. Omarchy's own command regenerates the usage files (0.9 s); the timestamps are read to notice if they still are not moving |
 | `ls -1 ~/.local/state/omaquest/bard` | At startup and when a song appears, **only if you switch the Bard on**, to know which days have one |
 | `find ~/Work …`, then `git -C <repo> rev-list --count …` | Every 30 minutes, **only if you switch the commit sensor on** |
-| `mkdir -p <state>/bard` and `omarchy agent prompt "<fixed text>"` | **Only when you click "Ask the Bard"**, at most once a day, and only if you switched the Bard on |
+| `omarchy agent prompt "<fixed text>"` | **Only when you click "Ask the Bard"**, and only if you switched the Bard on |
 | `pw-play --volume <v> assets/sounds/<file>.wav` | **Only if you switch sound on**, and then only during a fight or for a level or a find |
 
 Never `notify-send` (the Omarchy notification server drops it), never `curl`,
