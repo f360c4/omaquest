@@ -56,6 +56,7 @@ Panel {
     // goes last because it is the one nobody opens twice.
     return [
       { id: "hero", label: root.t("ui.tab_hero"), marked: false },
+      { id: "gear", label: root.t("ui.tab_gear"), marked: false },
       { id: "chronicle", label: root.t("ui.tab_chronicle"), marked: false },
       { id: "arena", label: root.t("ui.tab_arena"), marked: root.arenaUnseen },
       { id: "expedition", label: root.t("ui.tab_expedition"), marked: root.expeditionUnseen },
@@ -224,6 +225,18 @@ Panel {
             active: root.serviceReady && root.hasHero && root.tab === "forge"
             visible: active
             sourceComponent: ForgeView {
+              game: root.game
+              foreground: root.contentForeground
+              fontFamily: root.contentFontFamily
+            }
+          }
+
+          Loader {
+            id: gear
+            width: parent.width
+            active: root.serviceReady && root.hasHero && root.tab === "gear"
+            visible: active
+            sourceComponent: GearView {
               game: root.game
               foreground: root.contentForeground
               fontFamily: root.contentFontFamily

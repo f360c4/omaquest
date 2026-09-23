@@ -64,7 +64,7 @@ var CLASSES = {
     // `skillDamage`: what the skill lands relative to a plain hit, zero when it
     // spends the turn on something other than damage. `power` is measured by
     // tools/balance.js and covers everything else the skill is worth.
-    combat: { power: 1.235, skillDamage: 0 }
+    combat: { power: 1.224, skillDamage: 0 }
   },
   bard: {
     id: "bard", lens: { art: CLASS_LENS }, primary: "cha",
@@ -73,7 +73,7 @@ var CLASSES = {
     // `skillDamage`: what the skill lands relative to a plain hit, zero when it
     // spends the turn on something other than damage. `power` is measured by
     // tools/balance.js and covers everything else the skill is worth.
-    combat: { power: 1.06, skillDamage: 0 }
+    combat: { power: 1.038, skillDamage: 0 }
   },
   druid: {
     id: "druid", lens: { nature: CLASS_LENS }, primary: "vit",
@@ -82,7 +82,7 @@ var CLASSES = {
     // `skillDamage`: what the skill lands relative to a plain hit, zero when it
     // spends the turn on something other than damage. `power` is measured by
     // tools/balance.js and covers everything else the skill is worth.
-    combat: { power: 0.998, skillDamage: 0 }
+    combat: { power: 0.989, skillDamage: 0 }
   },
   archer: {
     // Two lenses instead of one: the ranger covers ground and fights at the
@@ -90,7 +90,7 @@ var CLASSES = {
     id: "archer", lens: { exploration: RANGER_LENS, combat: RANGER_LENS }, primary: "agi",
     secondaries: ["str", "vit", "wis", "cha"],
     skill: { id: "volley", cooldown: 3 },
-    combat: { power: 0.95, skillDamage: 1.6 }
+    combat: { power: 0.954, skillDamage: 1.6 }
   },
   mage: {
     id: "mage", lens: { arcane: CLASS_LENS }, primary: "wis",
@@ -99,7 +99,7 @@ var CLASSES = {
     // `skillDamage`: what the skill lands relative to a plain hit, zero when it
     // spends the turn on something other than damage. `power` is measured by
     // tools/balance.js and covers everything else the skill is worth.
-    combat: { power: 1.119, skillDamage: 1.5 }
+    combat: { power: 1.107, skillDamage: 1.5 }
   }
 }
 
@@ -652,7 +652,7 @@ function enemyFor(kind, tier, hero, boss) {
 
   // What the hero lands in an average turn: the swing averages +1, and a
   // critical is half again on the share of turns it happens.
-  var heroDamage = (3 + num(attrs.str) + level + num(gear.damage) + 1) * (1 + critChance(attrs) * 0.5)
+  var heroDamage = (attackValue(hero, attrs) + 1) * (1 + critChance(attrs) * 0.5)
 
   // Fold in the skill rotation. Over one cooldown cycle the hero spends
   // `cooldown` turns attacking and one on the skill, which lands
@@ -704,6 +704,58 @@ function critChance(attrs) {
 var SKILL_POWER_PER_POINT = 0.02
 var SKILL_POWER_CAP = 1.45
 
+// ---- What an attribute is for.
+//
+// One rule, six classes: **your primary attribute is your power.** It drives
+// your attack and your skill, and it is the one that rises every level. A
+// warrior hits with Strength, a mage with Wisdom, a bard with Charisma — and
+// nobody has to be told that Strength somehow powers a fireball.
+//
+// The others each do one thing, always the same thing, for everyone:
+//   Vigour     health
+//   Agility    dodging and critical hits
+//   Charisma   gold, and the chance of something rare
+//
+// Defence is deliberately **not** an attribute. It comes from armour and
+// nothing else, which is why the panel shows it under what you are wearing
+// rather than in the list of five.
+function primaryValue(hero, attrs) {
+  var resolved = attrs || effectiveAttrs(hero)
+  return num(resolved[classOf(hero).primary], BASE_ATTR)
+}
+
+// What one blow lands before the swing, the enemy's armour and a critical.
+function attackValue(hero, attrs) {
+  return 3 + primaryValue(hero, attrs) + num(hero && hero.level, 1) + num(equipmentStats(hero).damage)
+}
+
+function defenseValue(hero) {
+  return num(equipmentStats(hero).defense)
+}
+
+// What an attribute is currently doing for this hero, as a number the panel
+// can print. Derived here rather than in QML so that the sheet cannot drift
+// from the rules it is describing.
+function attrReadout(hero, attr) {
+  var attrs = effectiveAttrs(hero)
+  var isPrimary = classOf(hero).primary === attr
+  var value = num(attrs[attr], BASE_ATTR)
+
+  if (isPrimary) return { key: "power", value: attackValue(hero, attrs) }
+  if (attr === "vit") return { key: "health", value: hpMax(hero) }
+  if (attr === "agi") return { key: "evasion", value: Math.round(dodgeChance(attrs) * 100) }
+  if (attr === "cha") return { key: "fortune", value: Math.round(Math.max(0, value - BASE_ATTR) * 4) }
+  if (attr === "wis") return { key: "idle", value: 0 }
+  if (attr === "str") return { key: "idle", value: 0 }
+  return { key: "idle", value: 0 }
+}
+
+// The part of an attribute that came from gear rather than from levelling, so
+// the sheet can show 14 (+2) instead of a 16 nobody can account for.
+function attrFromGear(hero, attr) {
+  return num(equipmentStats(hero)[attr])
+}
+
 function skillPower(hero, attrs) {
   var primary = classOf(hero).primary
   var points = Math.max(0, num(attrs[primary]) - BASE_ATTR)
@@ -730,10 +782,11 @@ function combatRound(hero, fight, action, random) {
   var dodgeNext = !!fight.dodgeNext
   var critNext = !!fight.critNext
 
-  // Str plus the level itself: without the flat term a class that never
-  // raises Str deals the same damage at 30 as it did at 1, and the enemy
-  // curve leaves it behind entirely.
-  var baseDamage = 3 + num(attrs.str) + num(hero && hero.level, 1) + num(gear.damage)
+  // The class's own primary, plus the level itself. Reading it off Strength
+  // specifically left five of the six classes dealing the same damage at 30
+  // as at 1, and left a player wondering why their mage's attack scaled with
+  // muscle.
+  var baseDamage = attackValue(hero, attrs)
   var enemyDef = num(fight.enemy.def)
 
   if (action === "skill" && cooldown <= 0) {
@@ -1064,7 +1117,9 @@ if (typeof module !== "undefined" && module.exports) {
     cloneHero: cloneHero, recipeById: recipeById, equipmentStats: equipmentStats,
     effectiveAttrs: effectiveAttrs, costFor: costFor, canCraft: canCraft,
     enemyFor: enemyFor, dodgeChance: dodgeChance, critChance: critChance,
-    skillPower: skillPower, combatRound: combatRound, combatRewards: combatRewards,
+    skillPower: skillPower, primaryValue: primaryValue,
+    attackValue: attackValue, defenseValue: defenseValue,
+    attrReadout: attrReadout, attrFromGear: attrFromGear, combatRound: combatRound, combatRewards: combatRewards,
     dailyQuests: dailyQuests, wanderers: wanderers, destinations: destinations,
     expeditionSpec: expeditionSpec, resolveExpedition: resolveExpedition,
     bossEpithet: bossEpithet, bossStats: bossStats,

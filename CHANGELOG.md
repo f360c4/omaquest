@@ -15,6 +15,17 @@ All notable changes to this project are documented here. The format follows
 - `omarchy-shell f360c4.omaquest stroll`, so the walk can go on a keybind.
 
 ### Changed
+- **Every class now attacks with its own primary attribute**, not with
+  Strength. A warrior hits with Strength, a mage with Wisdom, a bard with
+  Charisma. The old rule needed a paragraph to explain why a mage's attack
+  scaled with muscle, and a rule that needs a paragraph is a defect.
+- The hero sheet says what each attribute is doing, with the number: "Strength
+  14 · your attack · 27", "Wisdom 5 · nothing, for your calling". Gear bonuses
+  are shown apart from levelled values.
+- Gear moved out of the bottom of the Forge into its own tab, with the
+  attributes and the totals they feed. Every option shows what it would
+  change, against what is worn right now.
+- Armour can be taken off.
 - Low health no longer blinks. The flinch is half a second on the blow that
   lands; being wounded is a slower breath and a body sitting a pixel lower.
   A bar widget that strobes for half an hour is a bar widget people remove.

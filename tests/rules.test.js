@@ -873,6 +873,93 @@ test("equipping swaps rather than destroys", () => {
   assert(state.hero.chest.indexOf("iron_sword") !== -1, "the old one went back to the chest")
 })
 
+test("every class attacks with its own primary attribute", () => {
+  // One rule for six classes: your primary is your power. Reading damage off
+  // Strength specifically left five of the six dealing the same damage at 30
+  // as at 1, and left nobody able to explain why a mage's attack scaled with
+  // muscle.
+  for (const cls of Rules.CLASS_IDS) {
+    const primary = Rules.CLASSES[cls].primary
+    const low = heroOf("human", cls, 1)
+    const high = heroOf("human", cls, 20)
+
+    assert(Rules.attackValue(high) > Rules.attackValue(low), `${cls} gets stronger`)
+
+    // Raising the primary by hand raises the attack; raising anything else
+    // does not.
+    for (const attr of Rules.ATTRS) {
+      const bumped = heroOf("human", cls, 10)
+      bumped.attrs[attr] += 5
+      const moved = Rules.attackValue(bumped) > Rules.attackValue(heroOf("human", cls, 10))
+      assertEqual(moved, attr === primary, `${cls}: ${attr} should ${attr === primary ? "" : "not "}move attack`)
+    }
+  }
+})
+
+test("defence comes from armour and from nowhere else", () => {
+  const bare = heroOf("human", "warrior", 10)
+  assertEqual(Rules.defenseValue(bare), 0, "no armour, no defence")
+
+  for (const attr of Rules.ATTRS) {
+    const bumped = heroOf("human", "warrior", 10)
+    bumped.attrs[attr] += 10
+    assertEqual(Rules.defenseValue(bumped), 0, `${attr} is not defence`)
+  }
+
+  const armoured = heroOf("human", "warrior", 10)
+  armoured.equipment.armor = "plated_mail"
+  assertEqual(Rules.defenseValue(armoured), Rules.recipeById("plated_mail").stats.defense, "armour is")
+})
+
+test("the sheet's explanation of an attribute matches what it does", () => {
+  for (const cls of Rules.CLASS_IDS) {
+    const hero = heroOf("human", cls, 12)
+    const primary = Rules.CLASSES[cls].primary
+
+    assertEqual(Rules.attrReadout(hero, primary).key, "power", `${cls} primary reads as power`)
+    assertEqual(Rules.attrReadout(hero, primary).value, Rules.attackValue(hero), `${cls} primary shows the attack`)
+
+    if (primary !== "vit") assertEqual(Rules.attrReadout(hero, "vit").key, "health", `${cls} vit`)
+    if (primary !== "agi") assertEqual(Rules.attrReadout(hero, "agi").key, "evasion", `${cls} agi`)
+    if (primary !== "cha") assertEqual(Rules.attrReadout(hero, "cha").key, "fortune", `${cls} cha`)
+
+    // Whatever is neither the primary nor one of those three does nothing for
+    // this hero, and the sheet says so rather than implying otherwise.
+    for (const attr of ["str", "wis"])
+      if (attr !== primary) assertEqual(Rules.attrReadout(hero, attr).key, "idle", `${cls} ${attr}`)
+  }
+})
+
+test("gear bonuses are reported separately from levelled attributes", () => {
+  const hero = heroOf("human", "warrior", 10)
+  assertEqual(Rules.attrFromGear(hero, "str"), 0, "nothing worn")
+
+  hero.equipment.weapon = "core_sword"
+  assertEqual(Rules.attrFromGear(hero, "str"), 1, "the core sword's point of Strength")
+  assertEqual(Rules.effectiveAttrs(hero).str, hero.attrs.str + 1, "and it counts")
+})
+
+test("taking something off returns it and lowers what it raised", () => {
+  let state = freshState("human", "druid")
+  state.hero.chest = ["plated_mail"]
+  state = World.apply(state, { type: "equip", item: "plated_mail" }, T0).state
+
+  const withArmour = state.hero.hpMax
+  assertEqual(state.hero.chest.length, 0, "out of the chest")
+
+  state = World.apply(state, { type: "unequip", slot: "armor" }, T0).state
+  assertEqual(state.hero.equipment.armor, null, "off")
+  assertEqual(state.hero.chest.indexOf("plated_mail"), 0, "back in the chest")
+  assert(state.hero.hpMax < withArmour, "and the health it added is gone")
+  assert(state.hero.hp >= 1, "without ever leaving the hero on zero")
+})
+
+test("taking off an empty slot does nothing", () => {
+  const state = freshState()
+  const before = JSON.stringify(state)
+  assertEqual(JSON.stringify(World.apply(state, { type: "unequip", slot: "amulet" }, T0).state), before, "untouched")
+})
+
 test("equipping something not in the chest does nothing", () => {
   const state = freshState()
   const result = World.apply(state, { type: "equip", item: "core_aegis" }, T0)

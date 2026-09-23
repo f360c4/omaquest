@@ -623,3 +623,63 @@ runs faster than the budget allows.
 
 A real percentage would need a bar carrying nothing else. That is worth doing
 once, on a spare user account, before anyone claims a number in a README.
+
+### Your primary attribute is your power, for every class
+
+The old rule was the specification's: `damage = 3 + Strength`. Two separate
+problems came out of it, and the second is the one that actually mattered.
+
+The first was mechanical, and was patched early by adding a per-level term —
+without it, five of the six classes dealt the same damage at level 30 as at
+level 1, because they never raise Strength.
+
+The second was that **nobody could explain it**. Asked directly: "Strength is
+attack, but what about the mage — does it go up with intelligence?" There was
+an answer, but it took a paragraph: the mage's basic attack does scale with
+Strength, badly, and its real damage comes from Fireball, which scales with
+Wisdom because Wisdom is the mage's primary. A rule that takes a paragraph is
+not a rule, it is a defect with documentation.
+
+So: **the class's own primary drives the attack and the skill**, for all six.
+A warrior hits with Strength, a mage with Wisdom, a bard with Charisma. The
+others each do exactly one thing, the same thing for everyone — Vigour is
+health, Agility is dodging and criticals, Charisma is gold and rare finds.
+
+And **defence is deliberately not an attribute**. It comes from armour and
+nothing else, so it is shown under what you are wearing rather than in the
+list of five. A test asserts that no attribute moves it.
+
+What this cost: a recalibration (`node tools/balance.js --tune`), which came
+back with constants within 2% of the old ones. The model got simpler and the
+balance did not move.
+
+### The sheet now says what each attribute is doing
+
+Five numbers with no explanation is the shape of the question that started
+this. Each attribute now carries a line derived from the rules themselves —
+`Rules.attrReadout` — so the sheet cannot drift from what it is describing:
+
+> Strength 14 · your attack · 27
+> Wisdom 5 · nothing, for your calling
+
+"Nothing, for your calling" is the honest answer for a warrior's Wisdom, and
+writing it down is better than leaving somebody to work it out by levelling.
+
+Gear bonuses are printed apart from levelled values — `14 +2` rather than a
+16 nobody can account for.
+
+### Gear has its own tab, and every option shows its delta
+
+It used to be a list at the bottom of the Forge, nine recipes below the
+materials, with no indication that scrolling was where equipping lived. Now it
+is its own tab holding the attributes, what they add up to, and the three
+slots — because "what does this change" is one question and those are its
+three halves.
+
+Each option shows the **difference** against what is worn right now, computed
+by building the hero both ways and subtracting, so it cannot disagree with
+what the click actually does. "+2 attack, -1 defence" is the decision; "+4
+damage" is a fact you then have to do arithmetic on.
+
+Taking something off is possible, which it was not: a slot you can fill but
+not empty is a one-way door.

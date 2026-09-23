@@ -212,55 +212,6 @@ Item {
 
     PanelSeparator { width: parent.width }
 
-    // ---- Attributes. Five rows rather than a grid: the names are long in
-    //      Portuguese and a two-column layout clips them.
-    Column {
-      width: parent.width
-      spacing: Style.space(3)
-
-      PanelSectionHeader {
-        text: root.t("ui.attributes")
-        foreground: root.foreground
-        fontFamily: root.fontFamily
-      }
-
-      Repeater {
-        model: Rules.ATTRS
-
-        Item {
-          id: attrRow
-          required property string modelData
-          width: column.width
-          height: attrLabel.implicitHeight
-
-          readonly property bool isPrimary: root.hero
-            && Rules.CLASSES[root.hero.cls]
-            && Rules.CLASSES[root.hero.cls].primary === modelData
-
-          Text {
-            id: attrLabel
-            textFormat: Text.PlainText
-            text: root.t("attr." + attrRow.modelData)
-            color: attrRow.isPrimary ? Color.accent : Qt.darker(root.foreground, 1.3)
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
-            renderType: Text.NativeRendering
-          }
-
-          Text {
-            anchors.right: parent.right
-            textFormat: Text.PlainText
-            text: root.hero && root.hero.attrs ? String(root.hero.attrs[attrRow.modelData]) : "-"
-            color: root.foreground
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
-            font.bold: attrRow.isPrimary
-            renderType: Text.NativeRendering
-          }
-        }
-      }
-    }
-
     PanelSeparator { width: parent.width }
 
     // ---- Today's three. Progress is read off the day's counters, so a bar
@@ -301,54 +252,7 @@ Item {
 
     PanelSeparator { width: parent.width }
 
-    // ---- What is worn, and what has been earned.
-    Column {
-      width: parent.width
-      spacing: Style.space(3)
-      visible: !!root.hero
-
-      PanelSectionHeader {
-        text: root.t("ui.equipment")
-        foreground: root.foreground
-        fontFamily: root.fontFamily
-      }
-
-      Repeater {
-        model: Rules.SLOTS
-
-        Item {
-          id: slotRow
-          required property string modelData
-
-          width: column.width
-          height: slotLabel.implicitHeight
-
-          readonly property string worn: root.hero && root.hero.equipment
-            ? (root.hero.equipment[modelData] || "") : ""
-
-          Text {
-            id: slotLabel
-            textFormat: Text.PlainText
-            text: root.t("slot." + slotRow.modelData)
-            color: Qt.darker(root.foreground, 1.3)
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
-            renderType: Text.NativeRendering
-          }
-
-          Text {
-            anchors.right: parent.right
-            textFormat: Text.PlainText
-            text: slotRow.worn ? root.t("item." + slotRow.worn + ".name") : root.t("ui.empty_slot")
-            color: slotRow.worn ? root.foreground : Qt.darker(root.foreground, 2.0)
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
-            renderType: Text.NativeRendering
-          }
-        }
-      }
-    }
-
+    // ---- What has been earned.
     Flow {
       width: parent.width
       spacing: Style.space(6)

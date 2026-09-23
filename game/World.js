@@ -70,6 +70,7 @@ function apply(state, event, now) {
     case "collect_expedition": return collectExpedition(next, event, at)
     case "craft": return craft(next, event, at)
     case "equip": return equip(next, event, at)
+    case "unequip": return unequip(next, event, at)
     case "buy_material": return buyMaterial(next, event, at)
     case "sell_item": return sellItem(next, event, at)
     case "change_class": return changeClass(next, event, at)
@@ -910,6 +911,28 @@ function strollFound(state, event, at) {
   return { state: state, effects: effects, found: { material: material, gold: gold } }
 }
 
+// Taking something off. A slot you can put things into but not take things
+// out of is a one-way door, and armour that raises the maximum has to be
+// allowed to lower it again.
+function unequip(state, event, at) {
+  if (!state.hero) return { state: state, effects: [] }
+
+  var slot = String(event.slot || "")
+  if (Rules.SLOTS.indexOf(slot) === -1) return { state: state, effects: [] }
+
+  var worn = state.hero.equipment[slot]
+  if (!worn) return { state: state, effects: [] }
+
+  state.hero.equipment[slot] = null
+  if (state.hero.chest.length < 60) state.hero.chest.push(worn)
+
+  state.hero.hpMax = Rules.hpMax(state.hero)
+  state.hero.hp = Rules.clamp(Rules.num(state.hero.hp), 1, state.hero.hpMax)
+  state.hero.hpUpdatedAt = at
+
+  return { state: state, effects: [{ type: "save" }] }
+}
+
 // ================================================================ merchant
 
 function buyMaterial(state, event, at) {
@@ -1069,7 +1092,7 @@ if (typeof module !== "undefined" && module.exports) {
     fightAction: fightAction, flee: flee, cancelFight: cancelFight,
     threatById: threatById, MAX_LOG_LINES: MAX_LOG_LINES,
     startExpedition: startExpedition, resolveExpedition: resolveExpedition,
-    collectExpedition: collectExpedition, craft: craft, equip: equip,
+    collectExpedition: collectExpedition, craft: craft, equip: equip, unequip: unequip,
     changeClass: changeClass, rebirth: rebirth, CLASS_CHANGE_GOLD: CLASS_CHANGE_GOLD,
     canStroll: canStroll, strollPays: strollPays, strollFound: strollFound,
     buyMaterial: buyMaterial, sellItem: sellItem

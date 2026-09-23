@@ -255,75 +255,17 @@ Item {
       }
     }
 
-    // ---- The chest. Everything here can be put on, and putting something on
-    //      puts whatever was there back, so nothing is ever lost to a choice.
-    Column {
+    // ---- Where what you make ends up. The chest used to live here, which
+    //      put equipping nine recipes away from the stats it changes.
+    Text {
       width: parent.width
-      spacing: Style.space(4)
-
-      PanelSectionHeader {
-        text: root.t("forge.chest")
-        foreground: root.foreground
-        fontFamily: root.fontFamily
-      }
-
-      Text {
-        width: parent.width
-        visible: !root.hero || root.hero.chest.length === 0
-        textFormat: Text.PlainText
-        text: root.t("forge.chest_empty")
-        color: Qt.darker(root.foreground, 1.6)
-        font.family: root.fontFamily
-        font.pixelSize: Style.font.caption
-        renderType: Text.NativeRendering
-      }
-
-      Repeater {
-        model: root.hero ? root.hero.chest : []
-
-        Item {
-          id: chestRow
-          required property string modelData
-
-          width: column.width
-          height: Style.space(28)
-
-          Text {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            textFormat: Text.PlainText
-            text: root.t("item." + chestRow.modelData + ".name")
-            color: root.foreground
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
-            renderType: Text.NativeRendering
-          }
-
-          Row {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Style.space(4)
-
-            Button {
-              text: root.t("forge.equip")
-              foreground: root.foreground
-              fontFamily: root.fontFamily
-              fontSize: Style.font.bodySmall
-              onClicked: if (root.game) root.game.dispatch({ type: "equip", item: chestRow.modelData })
-            }
-
-            Button {
-              text: root.t("forge.sell", {
-                gold: Rules.itemValue(Rules.recipeById(chestRow.modelData))
-              })
-              foreground: Qt.darker(root.foreground, 1.3)
-              fontFamily: root.fontFamily
-              fontSize: Style.font.bodySmall
-              onClicked: if (root.game) root.game.dispatch({ type: "sell_item", item: chestRow.modelData })
-            }
-          }
-        }
-      }
+      wrapMode: Text.WordWrap
+      textFormat: Text.PlainText
+      text: root.t("forge.chest_moved")
+      color: Qt.darker(root.foreground, 1.6)
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.caption
+      renderType: Text.NativeRendering
     }
   }
 }
