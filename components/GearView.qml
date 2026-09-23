@@ -36,6 +36,33 @@ Item {
     return root.hero && root.hero.equipment ? (root.hero.equipment[slot] || "") : ""
   }
 
+  // How many of a thing is in the chest. The chest is a plain list with
+  // repeats in it, and every view of it used to fold those away — two Iron
+  // Swords looked exactly like one, right up until you sold one and the row
+  // stayed.
+  function countOf(id) {
+    if (!root.hero || !root.hero.chest) return 0
+    var n = 0
+    for (var i = 0; i < root.hero.chest.length; i++)
+      if (root.hero.chest[i] === id) n++
+    return n
+  }
+
+  // A suffix, only when there is more than one. "×1" on every row is noise.
+  function times(id) {
+    var n = root.countOf(id)
+    return n > 1 ? "  ×" + n : ""
+  }
+
+  // Everything in the chest, once per kind, in the order it was put there.
+  function chestKinds() {
+    if (!root.hero || !root.hero.chest) return []
+    var out = []
+    for (var i = 0; i < root.hero.chest.length; i++)
+      if (out.indexOf(root.hero.chest[i]) === -1) out.push(root.hero.chest[i])
+    return out
+  }
+
   // Everything that fits this slot, worn or not. What is on goes first and is
   // marked: a list of alternatives that leaves out the thing you are wearing
   // is a list you cannot compare against.
@@ -211,7 +238,7 @@ Item {
                   // Said next to the item rather than only at the top of the
                   // slot, because the list is where the comparison happens.
                   text: root.t("item." + option.modelData + ".name")
-                    + (option.worn ? "  " + root.t("ui.gear_equipped") : "")
+                    + (option.worn ? "  " + root.t("ui.gear_equipped") : root.times(option.modelData))
                   color: option.worn ? Color.accent : root.foreground
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.bodySmall
@@ -248,44 +275,95 @@ Item {
             }
           }
 
-          // ---- Selling, where the thing being sold is in front of you. It is
-          //      the same list, so nothing has to be found twice.
-          Repeater {
-            model: slotBlock.options
+        }
+      }
+    }
 
-            Item {
-              id: sellRow
-              required property string modelData
+    PanelSeparator { width: parent.width }
 
-              // Never what is on the hero: taking it off is one click and
-              // stops a misclick selling the sword you are holding.
-              readonly property bool sellable: slotBlock.worn !== modelData
+    // ---- The chest, and the only place anything is sold.
+    //
+    //      Selling used to live inside the slot disclosure, which meant it
+    //      only existed after you had clicked "wear" on the right slot — so
+    //      the answer to "where do I sell things" was three clicks deep in a
+    //      panel that had no sign there was anything down there. It is a
+    //      section now, with the counts on it.
+    Column {
+      width: parent.width
+      spacing: Style.space(3)
 
-              width: slotBlock.width
-              height: sellable ? Style.space(24) : 0
-              visible: sellable
+      PanelSectionHeader {
+        text: root.t("ui.chest")
+        foreground: root.foreground
+        fontFamily: root.fontFamily
+      }
 
-              Text {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                textFormat: Text.PlainText
-                text: root.t("item." + sellRow.modelData + ".name")
-                color: Qt.darker(root.foreground, 1.6)
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.caption
-                renderType: Text.NativeRendering
-              }
+      Text {
+        width: parent.width
+        visible: root.chestKinds().length === 0
+        wrapMode: Text.WordWrap
+        textFormat: Text.PlainText
+        text: root.t("ui.chest_empty")
+        color: Qt.darker(root.foreground, 1.7)
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        renderType: Text.NativeRendering
+      }
 
-              Button {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.t("forge.sell", { gold: Rules.itemValue(Rules.recipeById(sellRow.modelData)) })
-                foreground: Qt.darker(root.foreground, 1.3)
-                fontFamily: root.fontFamily
-                fontSize: Style.font.caption
-                onClicked: if (root.game) root.game.dispatch({ type: "sell_item", item: sellRow.modelData })
-              }
+      Repeater {
+        model: { root.revision; return root.chestKinds() }
+
+        Item {
+          id: chestRow
+          required property string modelData
+
+          readonly property var recipe: Rules.recipeById(modelData)
+
+          width: column.width
+          height: Math.max(Style.space(30), chestText.implicitHeight + Style.space(6))
+
+          Column {
+            id: chestText
+            anchors.left: parent.left
+            anchors.right: sellButton.left
+            anchors.rightMargin: Style.space(8)
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(1)
+
+            Text {
+              width: parent.width
+              elide: Text.ElideRight
+              textFormat: Text.PlainText
+              text: root.t("item." + chestRow.modelData + ".name") + root.times(chestRow.modelData)
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.bodySmall
+              renderType: Text.NativeRendering
             }
+
+            Text {
+              width: parent.width
+              wrapMode: Text.WordWrap
+              textFormat: Text.PlainText
+              text: chestRow.recipe ? root.t("slot." + chestRow.recipe.slot) : ""
+              color: Qt.darker(root.foreground, 1.6)
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              renderType: Text.NativeRendering
+            }
+          }
+
+          Button {
+            id: sellButton
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.t("forge.sell", { gold: Rules.itemValue(chestRow.recipe) })
+            foreground: root.foreground
+            fontFamily: root.fontFamily
+            fontSize: Style.font.bodySmall
+            bordered: true
+            onClicked: if (root.game)
+              root.game.dispatch({ type: "sell_item", item: chestRow.modelData })
           }
         }
       }
@@ -330,7 +408,10 @@ Item {
             Text {
               width: parent.width
               textFormat: Text.PlainText
-              text: root.t("potion." + potionRow.modelData + ".name") + "  " + potionRow.held
+              // Written the same way the chest writes it, because two ways of
+              // saying "how many" on one screen is one way too many.
+              text: root.t("potion." + potionRow.modelData + ".name")
+                + (potionRow.held > 0 ? "  ×" + potionRow.held : "")
               color: root.foreground
               font.family: root.fontFamily
               font.pixelSize: Style.font.bodySmall

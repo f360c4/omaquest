@@ -403,5 +403,7 @@
   "arena.loot_xp": "+{xp} experience",
   "bard.again": "Ask again",
   "settings.calling_confirm": "Become a {cls}? It costs {gold} gold and there is no refund. Your level, experience, gear and gold stay as they are; the attributes re-derive for the new calling, so some go up and some go down.",
-  "settings.calling_change": "Change calling"
+  "settings.calling_change": "Change calling",
+  "ui.chest": "In the chest",
+  "ui.chest_empty": "Nothing put away. What you forge and what you do not wear ends up here."
 }

@@ -403,5 +403,7 @@
   "arena.loot_xp": "+{xp} de experiência",
   "bard.again": "Consultar de novo",
   "settings.calling_confirm": "Virar {cls}? Custa {gold} de ouro e não tem reembolso. Seu nível, experiência, equipamento e ouro continuam como estão; os atributos são recalculados para o novo chamado, então alguns sobem e outros descem.",
-  "settings.calling_change": "Trocar de chamado"
+  "settings.calling_change": "Trocar de chamado",
+  "ui.chest": "No baú",
+  "ui.chest_empty": "Nada guardado. O que você forja e o que não está vestindo para aqui."
 }

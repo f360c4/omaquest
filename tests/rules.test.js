@@ -1413,6 +1413,34 @@ test("selling takes from the chest, pays by tier, and never touches what is worn
   assertEqual(worn.state.hero.gold, state.hero.gold, "and nothing was paid for it")
 })
 
+test("a second copy survives selling the first, and the count is conserved", () => {
+  // The chest is a list with repeats, and the panel now prints how many of a
+  // thing is in it. That number is only worth printing if the events keep it
+  // honest: selling one of two has to leave one, and wearing one of two has
+  // to leave one rather than swallowing both.
+  let state = freshState("human", "warrior")
+  state.hero.chest = ["iron_sword", "iron_sword", "core_sword"]
+  state.hero.equipment.weapon = null
+
+  const count = id => state.hero.chest.filter(x => x === id).length
+
+  state = World.apply(state, { type: "sell_item", item: "iron_sword" }, T0).state
+  assertEqual(count("iron_sword"), 1, "one sold, one left")
+
+  state = World.apply(state, { type: "equip", item: "iron_sword" }, T0).state
+  assertEqual(state.hero.equipment.weapon, "iron_sword", "worn")
+  assertEqual(count("iron_sword"), 0, "and taken out of the chest, not copied")
+
+  // Swapping puts the old one back, so nothing is destroyed by a change of mind.
+  state = World.apply(state, { type: "equip", item: "core_sword" }, T0).state
+  assertEqual(count("iron_sword"), 1, "the old blade came back")
+  assertEqual(count("core_sword"), 0, "and the new one left the chest")
+
+  state = World.apply(state, { type: "unequip", slot: "weapon" }, T0).state
+  assertEqual(count("core_sword"), 1, "taking it off puts it back")
+  assertEqual(state.hero.chest.length, 2, "two blades, which is what we started the swap with")
+})
+
 test("selling something back is worth less than buying its materials again", () => {
   // The merchant is not a laundry: a loop of forge, sell, buy, forge has to
   // lose money or it is an infinite one.
