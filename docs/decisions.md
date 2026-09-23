@@ -803,3 +803,20 @@ either.
 The prompt also names the language rather than passing a locale code. "Write in
 português do Brasil" is an instruction; "write in the language with the code
 pt-BR" is a puzzle, and a model that gets it wrong gets it wrong silently.
+
+### A pipe hid a failing checklist
+
+`./tools/security-check.sh | tail -2 && git commit` hands you `tail`'s exit
+code, not the script's, so a red checklist committed and pushed anyway. The
+check itself was right — it had caught a new file writer the moment it
+appeared, which is exactly its job.
+
+`tools/check-all.sh` runs every gate with `set -euo pipefail` and nothing
+piped. Use that rather than assembling a chain by hand.
+
+The same session, `tools/weight.sh` failed on a two-hundred-millisecond timer
+that is a perfectly good one-shot debounce. Its rule was "no short intervals",
+which is the wrong rule: a debounce is short by definition and is why the
+compositor sensor is cheap. It parses the `Timer` blocks now and asserts the
+rule that was actually meant — nothing **repeating** faster than a second, and
+every repeating timer gated on the game being up.

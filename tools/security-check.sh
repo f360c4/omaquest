@@ -50,24 +50,35 @@ check_absent "no notify-send"             'notify-send'
 check_absent "no rich text in the panel"  'textFormat:[[:space:]]*Text\.(RichText|StyledText|AutoText)'
 check_absent "no eval"                    '\beval\(|new[[:space:]]+Function\('
 
-# Files are written through exactly two FileViews, both pointed at the state
-# directory. Any other setText would be a write nobody declared.
+# Files are written through exactly three named FileViews. Any other setText
+# is a write nobody declared, and this is where it gets caught — it already
+# has, twice.
+writers="saveFile chronicleFile bardBriefFile"
+writer_pattern=$(echo "$writers" | tr ' ' '|')
+
 stray_writes=$(grep -rnoE '[A-Za-z_]+\.setText\(' "${code[@]}" 2>/dev/null \
-  | grep -vE '(saveFile|chronicleFile)\.setText' || true)
+  | grep -vE "($writer_pattern)\.setText" || true)
 if [ -n "$stray_writes" ]; then
-  fail "files are written only through saveFile and chronicleFile"
+  fail "files are written only through $writers"
   printf '%s\n' "$stray_writes" | sed 's/^/        /' >&2
 else
-  pass "files are written only through saveFile and chronicleFile"
+  pass "files are written only through $writers"
 fi
 
-# Both of those point inside the state directory and nowhere else.
-if grep -q 'path: root.savePath' Service.qml && grep -q 'path: root.chroniclePath' Service.qml \
-   && grep -q 'readonly property string savePath: stateDir' Service.qml \
-   && grep -q 'readonly property string chroniclePath: stateDir' Service.qml; then
-  pass "both writers point inside the state directory"
+# And every one of them points inside the state directory. A declared writer
+# aimed somewhere else is worse than an undeclared one.
+paths_ok=1
+for pair in "savePath:stateDir" "chroniclePath:stateDir" "bardBriefPath:bardDir"; do
+  prop=${pair%%:*}
+  root_dir=${pair##*:}
+  grep -qE "readonly property string $prop: $root_dir" Service.qml || paths_ok=0
+done
+grep -qE 'readonly property string bardDir: stateDir' Service.qml || paths_ok=0
+
+if [ "$paths_ok" -eq 1 ]; then
+  pass "every writer points inside the state directory"
 else
-  fail "both writers point inside the state directory"
+  fail "every writer points inside the state directory"
 fi
 
 # Every detached command starts with a program this README lists.

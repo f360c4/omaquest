@@ -44,35 +44,61 @@ echo "  allocates nothing. It stops when the sprite is not on screen, and"
 echo "  nothing at all runs before there is a hero."
 echo
 
-# Assert it, rather than only claiming it: any Timer in the plugin shorter than
-# a second that is not one of the documented single-shot debounces is a
-# regression, and this is where it gets caught.
+# Assert it, rather than only claiming it. The rule is not "no short
+# intervals": a debounce is short by definition and is the whole reason the
+# compositor sensor is cheap. The rule is that nothing **repeating** runs
+# faster than a second, and every repeating timer is gated on something.
+#
+# So the blocks get parsed rather than grepped. A line-at-a-time grep already
+# failed this once, on the two-hundred-millisecond one-shot that gives the
+# Bard's brief time to land before the agent opens it.
 echo "Timers in the source"
+
+report=$(awk '
+  /Timer[[:space:]]*\{/ { depth = 1; interval = ""; repeat = "false"; gate = "no"; next }
+  depth > 0 {
+    if ($0 ~ /\{/) depth++
+    if ($0 ~ /interval:[[:space:]]*[0-9]+/) {
+      line = $0
+      sub(/.*interval:[[:space:]]*/, "", line)
+      sub(/[^0-9].*/, "", line)
+      interval = line
+    }
+    if ($0 ~ /repeat:[[:space:]]*true/) repeat = "true"
+    if ($0 ~ /running:/) gate = "yes"
+    if ($0 ~ /\}/) {
+      depth--
+      if (depth == 0 && interval != "")
+        printf "%s\t%s\t%s\t%s\n", FILENAME, interval, repeat, gate
+    }
+  }
+' *.qml components/*.qml)
+
 bad=0
-while IFS= read -r line; do
-  file=${line%%:*}
-  interval=$(sed -E 's/.*interval:[[:space:]]*([0-9]+).*/\1/' <<<"$line")
-  [[ $interval =~ ^[0-9]+$ ]] || continue
-  repeat="one-shot"
-  printf '  %-34s %s ms\n' "$(basename "$file")" "$interval"
-  # The sprite's cadence is a binding rather than a literal, so anything
-  # literal and under a second here is something new and wants explaining.
-  if (( interval < 1000 )); then
-    echo "      ^ a literal interval under a second: only a debounce may be" >&2
+while IFS=$'\t' read -r file interval repeat gate; do
+  [ -n "$interval" ] || continue
+  kind=$([ "$repeat" = "true" ] && echo "repeating" || echo "one-shot")
+  printf '  %-24s %8s ms  %-10s %s\n' "$(basename "$file")" "$interval" "$kind" \
+    "$([ "$gate" = "yes" ] && echo "gated" || echo "ungated")"
+
+  if [ "$repeat" = "true" ] && [ "$interval" -lt 1000 ]; then
+    echo "      ^ repeating and under a second: the budget does not allow it" >&2
     bad=1
   fi
-done < <(grep -rn "interval:[[:space:]]*[0-9]" --include=*.qml . | grep -v "^\./\.git")
+  if [ "$repeat" = "true" ] && [ "$gate" != "yes" ]; then
+    echo "      ^ repeating with no running: condition — it would tick for a" >&2
+    echo "        plugin with no hero in it" >&2
+    bad=1
+  fi
+done <<< "$report"
 
 echo
 if (( bad )); then
-  echo "FAILED: a timer runs faster than the budget allows" >&2
+  echo "FAILED: a timer runs outside the budget" >&2
   exit 1
 fi
-
-# Every repeating Timer has to be gated on something, or it runs for a plugin
-# with no hero in it.
-echo "Repeating timers are gated on the game being up:"
-grep -rn -A2 "repeat: true" --include=*.qml . | grep -c "running:" | xargs printf '  %s of them carry a running: condition\n'
+echo "  Every repeating timer is a second or slower and gated on the game"
+echo "  being up. The short ones are all one-shot debounces."
 echo
 
 if [[ ${1:-} != "--memory" ]]; then

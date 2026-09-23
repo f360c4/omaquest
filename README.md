@@ -209,7 +209,7 @@ Written by Luiz Felipe with coding agents and language models doing a great
 deal of the typing, over one long session. That arrangement shows up in the
 repository in ways worth knowing about if you are reading the code:
 
-- The rules are pure JavaScript with no Qt in them, and there are 108 tests
+- The rules are pure JavaScript with no Qt in them, and there are 127 tests
   over them, because an agent that cannot run what it wrote is guessing.
 - `tools/balance.js` exists because the combat numbers in the original design
   did not survive being measured — a level 1 hero won 100% of its fights, and
