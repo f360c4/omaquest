@@ -820,3 +820,53 @@ which is the wrong rule: a debounce is short by definition and is why the
 compositor sensor is cheap. It parses the `Timer` blocks now and asserts the
 rule that was actually meant — nothing **repeating** faster than a second, and
 every repeating timer gated on the game being up.
+
+### The Bard's value is the shelf, not the page
+
+Asked what it actually changes: nothing, mechanically, and that is deliberate.
+It gives no experience, no gold, no item. A feature that rewarded spending
+tokens would be a feature that asked people to spend tokens, and the whole
+posture of the AI here is that it costs nothing unless you want it.
+
+But a single page about a single day *is* thin — which was the fair version of
+the complaint. So the songs accumulate. Each one sits under its own day in the
+Chronicle and stays there, and after a month the tab is a diary with prose in
+it rather than a log with a paragraph stuck on top. That is the thing worth
+having; the individual page never was.
+
+The shelf is read **from the directory**, not from the chronicle. The chronicle
+prunes to three hundred entries, so a busy fortnight drops its oldest days —
+and a shelf that empties itself when the log rolls over is not a shelf. A day
+whose entries have been pruned but whose song survives still gets its heading.
+
+### A switch that is on and doing nothing has to say why
+
+The AI sensor was switched on, more than twenty thousand tokens were spent, and
+nothing happened. Reported as a bug in the plugin. It was not one: the plugin
+does not write `~/.local/state/omarchy/agents/usage/` — `omarchy agent
+usage-update` does, and that is run by **Omarchy's own Agents widget**, which
+was disabled. The files had not been touched in five days, so the total the
+sensor read was frozen and no delta could ever appear.
+
+Correct behaviour, useless outcome, and no way for anybody to tell the
+difference from the outside. That is the same failure as the crash sensor
+retiring itself quietly, in a different costume.
+
+So the listing now reads modification times — `ls -l --time-style=+%s` instead
+of `ls -1`, the same one command — and when the freshest file is more than six
+hours old the setting says so in red, naming the widget to switch on. `status`
+carries `agentDataAge` and `agentDataStale` for a bug report.
+
+The rule this earns, which is worth stating once for all of them: **a sensor
+that depends on something outside the plugin has to be able to say when that
+something is not there.**
+
+### `~/Work` was a guess about somebody else's disk
+
+The commit sensor searched a hardcoded folder. If your repositories are
+somewhere else, the switch is on, the sensor runs, and it finds nothing for
+ever — the same silent no-op in a third costume. It is a `path` setting now,
+defaulting to `~/Work`, shown in Settings only while the sensor is on. `~` is
+expanded here rather than by a shell, and a path that is not absolute after
+that is refused rather than resolved against whatever the working directory
+happens to be.

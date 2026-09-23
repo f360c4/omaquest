@@ -28,7 +28,7 @@ Item {
 
   // Raised while a text field has focus, so Esc and the cursor keys go to the
   // field rather than to the panel.
-  readonly property bool editing: realmField.activeFocus
+  readonly property bool editing: realmField.activeFocus || gitField.activeFocus
 
   function t(key, vars) {
     return game ? game.t(key, vars) : key
@@ -243,6 +243,22 @@ Item {
               font.pixelSize: Style.font.caption
               renderType: Text.NativeRendering
             }
+
+            // A switch that is on and doing nothing has to say why. This one
+            // reads files somebody else writes, and if nobody is writing them
+            // it reads the same number for ever.
+            Text {
+              width: parent.width
+              visible: arcaneRow.modelData.key === "sensorAgents"
+                && !!root.game && root.game.agentDataStale
+              wrapMode: Text.WordWrap
+              textFormat: Text.PlainText
+              text: root.t("settings.sensorAgents_stale")
+              color: Color.urgent
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              renderType: Text.NativeRendering
+            }
           }
 
           ToggleSwitch {
@@ -252,6 +268,48 @@ Item {
             checked: root.setting(arcaneRow.modelData.key, false) === true
             onToggled: root.settingChanged(arcaneRow.modelData.key, !checked)
           }
+        }
+      }
+    }
+
+    // Where to look, shown only when there is any point in asking.
+    Column {
+      width: parent.width
+      spacing: Style.space(4)
+      visible: root.setting("sensorGit", false) === true
+
+      Text {
+        width: parent.width
+        wrapMode: Text.WordWrap
+        textFormat: Text.PlainText
+        text: root.t("settings.gitPath")
+        color: Qt.darker(root.foreground, 1.2)
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.bodySmall
+        renderType: Text.NativeRendering
+      }
+
+      Row {
+        width: parent.width
+        spacing: Style.space(6)
+
+        TextField {
+          id: gitField
+          width: parent.width - saveGitPath.width - Style.space(6)
+          foreground: root.foreground
+          maximumLength: 200
+          text: String(root.setting("gitPath", "~/Work"))
+          onAccepted: root.settingChanged("gitPath", text)
+        }
+
+        Button {
+          id: saveGitPath
+          text: root.t("settings.rename")
+          foreground: root.foreground
+          fontFamily: root.fontFamily
+          fontSize: Style.font.bodySmall
+          bordered: true
+          onClicked: root.settingChanged("gitPath", gitField.text)
         }
       }
     }

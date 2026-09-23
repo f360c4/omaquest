@@ -107,7 +107,8 @@ shell, never a string concatenated from anything.**
 | `mv <save> <save>.corrupt-<timestamp>.json` | Only when the save cannot be parsed |
 | `coredumpctl list --json=short --no-pager --since @<ts>` | Every 15 minutes, if `coredumpctl` is there |
 | `omarchy-notification-send --app-name omaquest …` | At most twice a day, only for categories left switched on |
-| `ls -1 <agents/usage>`, then `head -c 65536 <file>` | Every 15 minutes, **only if you switch the agent sensor on** |
+| `ls -l --time-style=+%s <agents/usage>`, then `head -c 65536 <file>` | Every 15 minutes, **only if you switch the agent sensor on**. The timestamps are read to notice when nothing is refreshing those files |
+| `ls -1 ~/.local/state/omaquest/bard` | At startup and when a song appears, **only if you switch the Bard on**, to know which days have one |
 | `find ~/Work …`, then `git -C <repo> rev-list --count …` | Every 30 minutes, **only if you switch the commit sensor on** |
 | `mkdir -p <state>/bard` and `omarchy agent prompt "<fixed text>"` | **Only when you click "Ask the Bard"**, at most once a day, and only if you switched the Bard on |
 | `pw-play --volume <v> assets/sounds/<file>.wav` | **Only if you switch sound on**, and then only during a fight or for a level or a find |

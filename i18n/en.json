@@ -296,9 +296,9 @@
   "settings.notifyQuests": "Tell me when the day is sealed",
   "settings.arcane": "Arcane sensors",
   "settings.sensorAgents": "AI agent usage",
-  "settings.sensorAgents_note": "Reads token totals from ~/.local/state/omarchy/agents/usage/. Numbers only — never a prompt, never an answer.",
+  "settings.sensorAgents_note": "Reads token totals from ~/.local/state/omarchy/agents/usage/. Numbers only — never a prompt, never an answer. Those files are written by Omarchy's own Agents widget, so that has to be enabled for this to see anything new.",
   "settings.sensorGit": "Commits in ~/Work",
-  "settings.sensorGit_note": "Counts commits with git rev-list, every half hour. Never a message, never a file name, never the name of a repository.",
+  "settings.sensorGit_note": "Counts commits with git rev-list, every half hour, in the folder below. Never a message, a file name, an author, or the name of a repository.",
   "settings.bard": "The Bard",
   "settings.bard_note": "Adds one button to the Chronicle that launches your own Omarchy agent to write today up. Your agent, your quota, once a day, and nothing runs without the click.",
   "settings.realm_name": "The realm's name",
@@ -396,5 +396,7 @@
   "language.self": "English",
   "bard.brief_title": "The chronicle so far",
   "bard.brief_hero": "{name}, level {level} {title} — a {race} {cls} of {realm}, a {realmType}.",
-  "bard.brief_state": "Health {hp} of {hpMax}. {gold} gold. Seal streak: {streak}."
+  "bard.brief_state": "Health {hp} of {hpMax}. {gold} gold. Seal streak: {streak}.",
+  "settings.sensorAgents_stale": "Nothing has refreshed those files in hours. Enable Omarchy's Agents widget, or run `omarchy agent usage-update` — until then this reads a frozen number and earns you nothing.",
+  "settings.gitPath": "Where your repositories are — searched one level deep, and only for .git folders"
 }

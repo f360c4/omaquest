@@ -31,7 +31,8 @@
       "sensorAgents": false,
       "sensorGit": false,
       "bardEnabled": false,
-      "sound": "off"
+      "sound": "off",
+      "gitPath": "~/Work"
     },
     "schema": [
       {
@@ -105,7 +106,14 @@
         "type": "boolean",
         "label": "Arcane sensor: git commits in ~/Work",
         "defaultValue": false,
-        "description": "Counts commits with git rev-list. Never reads messages, file names or repository names."
+        "description": "Counts commits with git rev-list, every 30 minutes, in the folder below. Never reads a message, a file name, an author, or the name of a repository."
+      },
+      {
+        "key": "gitPath",
+        "type": "path",
+        "label": "Where your repositories are",
+        "defaultValue": "~/Work",
+        "description": "Searched one level deep for .git folders, and only when the commit sensor is on. Nothing outside this folder is ever looked at."
       },
       {
         "key": "bardEnabled",

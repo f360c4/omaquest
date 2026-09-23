@@ -23,7 +23,22 @@ Item {
   readonly property var days: {
     revision
     if (!game || !game.chronicle) return []
-    return Chronicle.groupByDay(game.chronicle, Math.floor(Date.now() / 1000))
+
+    var grouped = Chronicle.groupByDay(game.chronicle, Math.floor(Date.now() / 1000))
+    var seen = {}
+    for (var i = 0; i < grouped.length; i++) seen[grouped[i].date] = true
+
+    // A day whose entries have been pruned but whose song survives still gets
+    // its heading: the song is the part worth keeping.
+    var songDays = game.songFiles || []
+    for (var s = 0; s < songDays.length; s++) {
+      if (seen[songDays[s]]) continue
+      if (!game.songFor(songDays[s])) continue
+      grouped.push({ date: songDays[s], labelKey: "", entries: [], notable: [], counts: {}, order: [] })
+    }
+
+    grouped.sort(function (a, b) { return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0) })
+    return grouped
   }
 
   function t(key, vars) {
@@ -50,46 +65,16 @@ Item {
     spacing: Style.space(10)
 
     // ---- The Bard. One button, at most once a day, and only if it was
-    //      switched on and `omarchy` is actually installed.
-    Column {
-      width: parent.width
-      spacing: Style.space(4)
-      visible: root.bardShown
-
-      Button {
-        visible: root.bardText.length === 0
-        text: root.t("bard.ask")
-        foreground: root.foreground
-        fontFamily: root.fontFamily
-        fontSize: Style.font.bodySmall
-        bordered: true
-        onClicked: if (root.game) root.game.askTheBard()
-      }
-
-      Column {
-        width: parent.width
-        spacing: Style.space(2)
-        visible: root.bardText.length > 0
-
-        PanelSectionHeader {
-          text: root.t("bard.title")
-          foreground: Color.accent
-          fontFamily: root.fontFamily
-        }
-
-        Text {
-          width: parent.width
-          wrapMode: Text.WordWrap
-          // Plain text: this was written by a language model into a file, and
-          // whatever it put there is a sentence, not markup.
-          textFormat: Text.PlainText
-          text: root.bardText
-          color: root.foreground
-          font.family: root.fontFamily
-          font.pixelSize: Style.font.bodySmall
-          renderType: Text.NativeRendering
-        }
-      }
+    //      switched on and `omarchy` is actually installed. The song itself
+    //      appears under its own day below, and stays there.
+    Button {
+      visible: root.bardShown && root.bardText.length === 0
+      text: root.t("bard.ask")
+      foreground: root.foreground
+      fontFamily: root.fontFamily
+      fontSize: Style.font.bodySmall
+      bordered: true
+      onClicked: if (root.game) root.game.askTheBard()
     }
 
     Text {
@@ -118,6 +103,41 @@ Item {
           text: root.headingFor(dayGroup.modelData)
           foreground: root.foreground
           fontFamily: root.fontFamily
+        }
+
+        // The song for this day, if the Bard was asked for one. Under the
+        // heading and above the lines, because it is about the day rather
+        // than a thing that happened in it.
+        Column {
+          width: dayGroup.width
+          spacing: Style.space(2)
+          visible: text.length > 0
+
+          readonly property string text: root.game
+            ? String(root.game.songFor(dayGroup.modelData.date) || "") : ""
+
+          Text {
+            width: parent.width
+            textFormat: Text.PlainText
+            text: root.t("bard.title")
+            color: Color.accent
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+            renderType: Text.NativeRendering
+          }
+
+          Text {
+            width: parent.width
+            wrapMode: Text.WordWrap
+            // Plain text: a language model wrote this into a file, and what it
+            // put there is a sentence, not markup.
+            textFormat: Text.PlainText
+            text: parent.text
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.bodySmall
+            renderType: Text.NativeRendering
+          }
         }
 
         // The day's routine, counted rather than recited.

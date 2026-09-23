@@ -296,9 +296,9 @@
   "settings.notifyQuests": "Me avise quando o dia for selado",
   "settings.arcane": "Sensores arcanos",
   "settings.sensorAgents": "Uso de agentes de IA",
-  "settings.sensorAgents_note": "Lê totais de tokens em ~/.local/state/omarchy/agents/usage/. Só números — nunca um prompt, nunca uma resposta.",
+  "settings.sensorAgents_note": "Lê totais de tokens em ~/.local/state/omarchy/agents/usage/. Só números — nunca um prompt, nunca uma resposta. Esses arquivos são escritos pelo widget Agents do próprio Omarchy, então ele precisa estar ligado para isto ver algo novo.",
   "settings.sensorGit": "Commits em ~/Work",
-  "settings.sensorGit_note": "Conta commits com git rev-list, a cada meia hora. Nunca uma mensagem, nunca um nome de arquivo, nunca o nome de um repositório.",
+  "settings.sensorGit_note": "Conta commits com git rev-list, a cada meia hora, na pasta abaixo. Nunca uma mensagem, um nome de arquivo, um autor, ou o nome de um repositório.",
   "settings.bard": "O Bardo",
   "settings.bard_note": "Põe um botão na Crônica que chama o seu agente do Omarchy para escrever o dia. Seu agente, sua cota, uma vez por dia, e nada roda sem o clique.",
   "settings.realm_name": "O nome do reino",
@@ -396,5 +396,7 @@
   "language.self": "português do Brasil",
   "bard.brief_title": "A crônica até aqui",
   "bard.brief_hero": "{name}, nível {level} {title} — um {race} {cls} de {realm}, uma {realmType}.",
-  "bard.brief_state": "Vida {hp} de {hpMax}. {gold} de ouro. Sequência de Selos: {streak}."
+  "bard.brief_state": "Vida {hp} de {hpMax}. {gold} de ouro. Sequência de Selos: {streak}.",
+  "settings.sensorAgents_stale": "Nada atualiza esses arquivos há horas. Ligue o widget Agents do Omarchy, ou rode `omarchy agent usage-update` — até lá isto lê um número congelado e não rende nada.",
+  "settings.gitPath": "Onde ficam seus repositórios — procurado um nível abaixo, e só por pastas .git"
 }

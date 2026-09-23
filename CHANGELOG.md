@@ -22,6 +22,15 @@ All notable changes to this project are documented here. The format follows
   to carry one.
 - `omarchy-shell f360c4.omaquest bard` and `… stroll`, so both can sit on a
   keybind.
+- The Bard's songs accumulate. Each sits under its own day in the Chronicle and
+  stays there, read from the directory so it survives the chronicle pruning.
+- `gitPath`: where the commit sensor looks. `~/Work` was a guess about somebody
+  else's disk.
+
+### Fixed
+- The AI sensor could be switched on, do nothing for ever, and say nothing
+  about it — the files it reads are written by Omarchy's Agents widget, and
+  with that disabled they simply freeze. It now notices and says so.
 - **Potions.** A Healing Draught returns half your health and gets you off the
   tavern floor; a Traveller's Flask returns a point of energy. Both are always
   in the merchant's stock, capped at five, and both work mid-fight.

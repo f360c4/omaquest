@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import QtQml
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -428,6 +429,7 @@ Item {
     uidProc.running = true
     coredumpProbe.running = true
     bardProbe.running = true
+    if (root.bardEnabled) songList.running = true
     root.revision += 1
     root.changed()
   }
@@ -829,18 +831,38 @@ Item {
   readonly property string agentUsageDir: stateHome + "/omarchy/agents/usage"
   readonly property bool sensorAgents: setting("sensorAgents", false) === true
 
+  // How old the freshest usage file is, in seconds. Worth knowing because the
+  // plugin does not write these — `omarchy agent usage-update` does, and that
+  // is run by Omarchy's own Agents widget. With that widget disabled nothing
+  // refreshes them, the numbers freeze, and this sensor reads a total that
+  // has not moved in days while the player wonders why nothing happens.
+  //
+  // Which is exactly what happened. So it is detected and said out loud,
+  // rather than being a switch that quietly does nothing.
+  property double agentDataAge: -1
+  readonly property bool agentDataStale: sensorAgents && agentDataAge > 21600   // six hours
+
   Process {
     id: agentsList
-    command: ["ls", "-1", root.agentUsageDir]
+    // `-l` with an epoch time stamp rather than `-1`: the same one command,
+    // and it answers "how old is this" as well as "what is here".
+    command: ["ls", "-l", "--time-style=+%s", root.agentUsageDir]
     stdout: StdioCollector { id: agentsOut; waitForEnd: true }
     onExited: function (exitCode) {
       if (exitCode !== 0) return
-      var names = String(agentsOut.text || "").split("\n")
+      var lines = String(agentsOut.text || "").split("\n")
       var files = []
-      for (var i = 0; i < names.length && files.length < 16; i++) {
-        var name = names[i].trim()
-        if (name.length > 0 && name.lastIndexOf(".json") === name.length - 5) files.push(name)
+      var newest = 0
+      for (var i = 0; i < lines.length && files.length < 16; i++) {
+        var parts = lines[i].trim().split(/\s+/)
+        if (parts.length < 7) continue
+        var name = parts[parts.length - 1]
+        if (name.lastIndexOf(".json") !== name.length - 5) continue
+        files.push(name)
+        var stamp = parseInt(parts[parts.length - 2], 10)
+        if (isFinite(stamp) && stamp > newest) newest = stamp
       }
+      root.agentDataAge = newest > 0 ? Math.max(0, Rules.nowSec() - newest) : -1
       root.agentFiles = files
       root.agentTotal = 0
       root.agentPending = files.length
@@ -929,7 +951,21 @@ Item {
   // ---- Commits. `git rev-list --count` and nothing else: never a message,
   //      never a file name, never the name of the repository.
   readonly property bool sensorGit: setting("sensorGit", false) === true
-  readonly property string workDir: (Quickshell.env("HOME") || "") + "/Work"
+
+  // Configurable, because "~/Work" was a guess about where somebody else keeps
+  // their repositories, and a sensor that searches a folder you do not use is
+  // a sensor that does nothing while claiming to work.
+  //
+  // Expanded here rather than by a shell: `~` is the only thing understood,
+  // and a path that does not start with `/` after that is refused outright
+  // rather than resolved against whatever the working directory happens to be.
+  readonly property string workDir: {
+    var home = Quickshell.env("HOME") || ""
+    var raw = String(setting("gitPath", "~/Work")).trim()
+    if (raw === "~") return home
+    if (raw.indexOf("~/") === 0) return home + raw.slice(1)
+    return raw.indexOf("/") === 0 ? raw : ""
+  }
 
   Process {
     id: repoList
@@ -986,7 +1022,7 @@ Item {
   Timer {
     interval: 1800000     // half an hour
     repeat: true
-    running: root.initialized && root.hasHero && root.sensorGit
+    running: root.initialized && root.hasHero && root.sensorGit && root.workDir !== ""
     triggeredOnStart: true
     onTriggered: {
       if (repoList.running || commitCounter.running) return
@@ -1009,7 +1045,65 @@ Item {
   readonly property string bardToday: bardDir + "/" + Rules.localDate(Rules.nowSec()) + ".md"
 
   property bool bardAvailable: false
-  property string bardText: ""
+
+  // Every song, by the day it was written for — not just today's.
+  //
+  // One page about one day is a summary and not worth much. Twenty of them,
+  // under the days they belong to, is a diary with prose in it, and that is
+  // the only reason this feature earns its place. The chronicle keeps ten
+  // days; so does this.
+  property var songs: ({})
+
+  // The days that have a song, read from the directory rather than inferred
+  // from the chronicle. The chronicle prunes to three hundred entries, so a
+  // busy fortnight drops the oldest days — and a shelf that empties itself
+  // when the log rolls over is not a shelf.
+  property var songFiles: []
+
+  Process {
+    id: songList
+    command: ["ls", "-1", root.bardDir]
+    stdout: StdioCollector { id: songOut; waitForEnd: true }
+    onExited: function (exitCode) {
+      if (exitCode !== 0) { root.songFiles = []; return }
+      var names = String(songOut.text || "").split("\n")
+      var dates = []
+      for (var i = 0; i < names.length; i++) {
+        var name = names[i].trim()
+        // A dated song and nothing else: `brief.md` is the plugin's own
+        // scratch file and is not a song.
+        var match = name.match(/^(\d{4}-\d{2}-\d{2})\.md$/)
+        if (match) dates.push(match[1])
+      }
+      dates.sort()
+      dates.reverse()
+      root.songFiles = dates.slice(0, Chronicle.MAX_DAYS_SHOWN)
+    }
+  }
+
+  readonly property var songDates: {
+    var dates = root.songFiles.slice()
+    var today = Rules.localDate(Rules.nowSec())
+    if (dates.indexOf(today) === -1) dates.unshift(today)
+    return dates.slice(0, Chronicle.MAX_DAYS_SHOWN + 1)
+  }
+
+  function songFor(date) {
+    var text = root.songs[String(date)]
+    return text === undefined ? "" : text
+  }
+
+  function rememberSong(date, text) {
+    var next = ({})
+    for (var key in root.songs) next[key] = root.songs[key]
+    // Bounded: a song is a page, and a page that grew to a megabyte is not a
+    // page any more.
+    next[String(date)] = String(text || "").slice(0, 8192)
+    root.songs = next
+    root.revision += 1
+  }
+
+  readonly property string bardText: songFor(Rules.localDate(Rules.nowSec()))
   readonly property bool bardUsedToday: bardText.length > 0
 
   Process {
@@ -1018,16 +1112,26 @@ Item {
     onExited: function (exitCode) { root.bardAvailable = exitCode === 0 }
   }
 
-  // Watched rather than polled, so the card appears the moment the agent saves
-  // without the panel being reopened.
-  FileView {
-    id: bardFile
-    path: root.bardToday
-    watchChanges: true
-    printErrors: false
-    onLoaded: root.bardText = String(text() || "").slice(0, 8192)
-    onLoadFailed: root.bardText = ""
-    onFileChanged: reload()
+  // One watcher per day on the shelf. Watched rather than polled, so today's
+  // card appears the moment the agent saves without the panel being reopened.
+  Instantiator {
+    model: root.songDates
+
+    delegate: FileView {
+      required property string modelData
+      path: root.bardDir + "/" + modelData + ".md"
+      watchChanges: true
+      printErrors: false
+      onLoaded: {
+        root.rememberSong(modelData, text())
+        // A song appearing for a day the shelf did not know about means the
+        // listing is out of date.
+        if (root.bardEnabled && root.songFiles.indexOf(modelData) === -1 && !songList.running)
+          songList.running = true
+      }
+      onLoadFailed: root.rememberSong(modelData, "")
+      onFileChanged: reload()
+    }
   }
 
   // ---- The brief.
@@ -1329,6 +1433,11 @@ Item {
         idle: root.idle,
         playing: root.anythingPlaying,
         battery: root.hasBattery,
+        // Seconds since anything last wrote an agent usage file, and whether
+        // that is old enough to mean the sensor is reading a frozen number.
+        agentDataAge: root.sensorAgents ? Math.round(root.agentDataAge) : -1,
+        agentDataStale: root.agentDataStale,
+        gitPath: root.sensorGit ? root.workDir : "",
         strolling: root.strolling,
         strollProgress: Math.round(root.strollProgress * 100) / 100,
         canStroll: root.canStroll,
