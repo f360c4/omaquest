@@ -781,3 +781,25 @@ Potions were repriced in the same breath — 110 and 170 gold against a good
 day's takings of about 150 — because a draught that costs an afternoon is a
 decision and one that costs two fights is a habit. A Healing Draught can be
 drunk inside a fight, which is the only reason to carry one.
+
+### The Bard reads a brief, not the save
+
+It was pointed at `save.json` and `chronicle.json` and asked to work it out.
+That is an agent opening two JSON files, inferring a schema nobody documented
+for it, and deciding which of three hundred entries belong to today — slow
+enough that the first person to use it noticed.
+
+The plugin already knows how to turn an entry into a sentence. So it writes the
+brief itself: the hero in a line, the day's summary, and its notable entries as
+prose, capped at twenty-five. About a page and a half of kilobytes, in the
+panel's language.
+
+Better on three axes at once. Faster, because there is nothing to infer.
+Smaller, because a rendered day is shorter than the JSON it came from. And less
+to hand over, because **the agent never opens the save at all** — which for the
+one feature in this plugin that talks to a language model is worth more than
+either.
+
+The prompt also names the language rather than passing a locale code. "Write in
+português do Brasil" is an instruction; "write in the language with the code
+pt-BR" is a puzzle, and a model that gets it wrong gets it wrong silently.

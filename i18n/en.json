@@ -317,7 +317,7 @@
   "bard.title": "The Bard's Song",
   "bard.ask": "Ask the Bard",
   "bard.asked": "The Bard has already sung today.",
-  "bard.prompt": "You are writing a short chronicle entry for the Omaquest plugin. Read {save} and {chronicle}, which are JSON. Write about 150 words about the most recent day, in the voice of a medieval bard, in the language with the code {language}. Save it to {out}, creating the directory if needed. Do not modify any other file, do not run any other command, and do not report anything back.",
+  "bard.prompt": "Read the short text file {brief} and nothing else. Write about 150 words in {language}, in the voice of a medieval bard who was there, about the most recent day it describes. Use the hero's name and the realm's name. Prefer the shape of the day to a list of events. Save it as plain prose to {out}. Do not open any other file, do not run any other command, and do not report anything back.",
   "class.archer.name": "Archer",
   "class.archer.bonus": "Exploration and Combat ×1.25 · Volley: two arrows, armour pays twice",
   "skill.volley.name": "Volley",
@@ -392,5 +392,9 @@
   "settings.sound_quiet": "Quiet",
   "settings.sound_full": "Full",
   "chron.arena_lost_xp.0": "{name} goes down, and wakes in the tavern {xp} experience poorer.",
-  "chron.arena_lost_xp.1": "Not this time. {xp} experience left on the sand."
+  "chron.arena_lost_xp.1": "Not this time. {xp} experience left on the sand.",
+  "language.self": "English",
+  "bard.brief_title": "The chronicle so far",
+  "bard.brief_hero": "{name}, level {level} {title} — a {race} {cls} of {realm}, a {realmType}.",
+  "bard.brief_state": "Health {hp} of {hpMax}. {gold} gold. Seal streak: {streak}."
 }

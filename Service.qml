@@ -12,6 +12,7 @@ import "components"
 import "game/Rules.js" as Rules
 import "game/World.js" as World
 import "game/Migrations.js" as Migrations
+import "game/Chronicle.js" as Chronicle
 
 // The world. One headless instance per session, created by the shell's plugin
 // host with `createObject(null)`; `shell` and `manifest` are injected when the
@@ -1029,18 +1030,97 @@ Item {
     onFileChanged: reload()
   }
 
+  // ---- The brief.
+  //
+  // The Bard used to be pointed at save.json and chronicle.json and asked to
+  // work it out. That means an agent opening two JSON files, inferring a
+  // schema nobody documented for it, and deciding which of three hundred
+  // entries are today's — which was slow enough to notice.
+  //
+  // So the plugin writes the brief instead. It already knows how to turn an
+  // entry into a sentence; doing it here costs nothing and leaves the agent
+  // one short text file to read and some prose to write. It is also less to
+  // hand over: the agent never opens the save at all.
+  readonly property string bardBriefPath: bardDir + "/brief.md"
+
+  FileView {
+    id: bardBriefFile
+    path: root.bardBriefPath
+    preload: false
+    watchChanges: false
+    atomicWrites: true
+    printErrors: false
+  }
+
+  function bardBrief() {
+    var hero = root.hero()
+    if (!hero) return ""
+
+    var lines = []
+    lines.push("# " + root.t("bard.brief_title"))
+    lines.push("")
+    lines.push(root.t("bard.brief_hero", {
+      name: hero.name,
+      level: hero.level,
+      title: root.t("title." + hero.title),
+      race: root.t("race." + hero.race + ".name"),
+      cls: root.t("class." + hero.cls + ".name"),
+      realm: root.world.realm.name,
+      realmType: root.t("realm." + root.world.realm.type + ".name")
+    }))
+    lines.push(root.t("bard.brief_state", {
+      hp: hero.hp, hpMax: hero.hpMax,
+      gold: hero.gold,
+      streak: root.world.streak ? root.world.streak.count : 0
+    }))
+    lines.push("")
+
+    var days = Chronicle.groupByDay(root.chronicle, Rules.nowSec())
+    // One day, because the song is about today. Two at most if today is thin.
+    var wanted = Math.min(days.length, days.length > 0 && days[0].notable.length < 3 ? 2 : 1)
+
+    for (var d = 0; d < wanted; d++) {
+      var day = days[d]
+      lines.push("## " + (day.labelKey ? root.t(day.labelKey) : day.date))
+      var summary = Chronicle.summarise(day, root.t.bind(root))
+      if (summary) lines.push(summary)
+      // Bounded: a day with forty notable lines is a day that does not need
+      // all forty in a brief.
+      var shown = Math.min(day.notable.length, 25)
+      for (var i = 0; i < shown; i++)
+        lines.push("- " + Chronicle.render(day.notable[i], root.t.bind(root), root.world))
+      lines.push("")
+    }
+
+    return lines.join("\n")
+  }
+
   function askTheBard() {
     if (!root.bardEnabled || !root.bardAvailable || !root.hasHero || root.bardUsedToday) return
 
-    // argv, and the prompt is the plugin's own sentence with the language and
-    // the paths filled in — no value from anywhere else reaches it.
-    Quickshell.execDetached(["mkdir", "-p", root.bardDir])
-    Quickshell.execDetached(["omarchy", "agent", "prompt", root.t("bard.prompt", {
-      save: root.savePath,
-      chronicle: root.chroniclePath,
-      out: root.bardToday,
-      language: i18n.code
-    })])
+    bardBriefFile.setText(bardBrief())
+    bardLaunch.restart()
+  }
+
+  // A beat between writing the brief and launching, so the agent never opens
+  // a file that is still being written.
+  Timer {
+    id: bardLaunch
+    interval: 200
+    repeat: false
+    onTriggered: {
+      // argv, and the prompt is the plugin's own sentence with the language
+      // and the paths filled in — no value from anywhere else reaches it.
+      Quickshell.execDetached(["omarchy", "agent", "prompt", root.t("bard.prompt", {
+        brief: root.bardBriefPath,
+        out: root.bardToday,
+        // The language by name, not by locale code. "write in português do
+        // Brasil" is an instruction; "write in the language with the code
+        // pt-BR" is a puzzle, and a model that gets it wrong gets it wrong
+        // silently.
+        language: root.t("language.self")
+      })])
+    }
   }
 
   // ------------------------------------------------------------- the stroll
@@ -1257,6 +1337,14 @@ Item {
         workspacesToday: Rules.num(root.world.day.counters.workspaces),
         appsToday: Rules.num(root.world.day.counters.apps),
         sessionMinutes: Rules.num(root.world.day.counters.sessionMin)
+      },
+      // Whether the Bard can run, is switched on, and has sung today. A
+      // boolean, never the song: what an agent wrote into that file is the
+      // player's, and `status` is something people paste into bug reports.
+      bard: {
+        available: root.bardAvailable,
+        enabled: root.bardEnabled,
+        songToday: root.bardUsedToday
       },
       bosses: (root.world.bosses || []).length,
       day: root.world.day ? root.world.day.date : "",

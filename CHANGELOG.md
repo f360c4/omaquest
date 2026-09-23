@@ -20,6 +20,8 @@ All notable changes to this project are documented here. The format follows
   not recorded — Karplus-Strong, about fifteen lines of arithmetic.
 - A Healing Draught can be drunk **inside** a fight, which is the only reason
   to carry one.
+- `omarchy-shell f360c4.omaquest bard` and `… stroll`, so both can sit on a
+  keybind.
 - **Potions.** A Healing Draught returns half your health and gets you off the
   tavern floor; a Traveller's Flask returns a point of energy. Both are always
   in the merchant's stock, capped at five, and both work mid-fight.
@@ -31,6 +33,9 @@ All notable changes to this project are documented here. The format follows
   lose, and a game with no stakes is a game nobody returns to.
 - Potions cost what a decision costs: 110 and 170 gold, against a good day's
   takings of about 150.
+- The Bard now reads a short brief the plugin writes for it — the last day's
+  chronicle already rendered as sentences — instead of the save and the
+  chronicle as JSON. Faster, smaller, and the agent never opens the save.
 - Closing the panel forgets which tab was open and comes back to the Hero
   sheet — unless a fight is in progress.
 - Gear is the inventory: the three slots, everything that fits them with

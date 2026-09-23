@@ -123,6 +123,9 @@ Never `notify-send` (the Omarchy notification server drops it), never `curl`,
   however much happens. A maximal save is under 64 KiB by design, and the test
   suite holds it to that.
 - `chronicle.json` — the last 300 entries, pruned on every append.
+- `bard/brief.md` — a short, readable summary of your last day, written when
+  you click the Bard so that your agent has one small text file to read
+  instead of the save.
 - `bard/YYYY-MM-DD.md` — written by **your** agent, only if you enable the Bard
   and click the button.
 
@@ -133,11 +136,17 @@ shell's API, which only lets a plugin write its own.
 
 Off by default, and the only path to a language model in the whole plugin.
 
-When enabled, the Chronicle tab gains one button that runs `omarchy agent
-prompt` with a fixed instruction: read the save, write today up in about 150
-words, save it to `~/.local/state/omaquest/bard/`, change nothing else. It uses
-your default agent and your quota. **Nothing runs without the click**, at most
-once a day, and the plugin never decides to spend a token on its own.
+When enabled, the Chronicle tab gains one button. It writes a short brief —
+your hero in a line, and the last day's chronicle already rendered as sentences
+— and then runs `omarchy agent prompt` with a fixed instruction: read that one
+file, write about 150 words in the panel's language, save it beside the brief,
+touch nothing else.
+
+The agent never opens your save. It reads a page of prose the plugin wrote for
+it, which is both faster than asking it to infer a JSON schema and less to hand
+over. It uses your default agent and your quota. **Nothing runs without the
+click**, at most once a day, and the plugin never decides to spend a token on
+its own.
 
 The button is hidden entirely if `omarchy` is not on your PATH.
 

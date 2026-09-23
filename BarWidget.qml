@@ -112,6 +112,13 @@ BarWidget {
     function hide(): void { root.close() }
     function toggle(): void { root.togglePanel() }
 
+    // Ask the Bard without opening the panel, so it can sit on a keybind.
+    // Refused, silently, if it is switched off, `omarchy` is not installed,
+    // or today already has a song.
+    function bard(): void {
+      if (root.game && typeof root.game.askTheBard === "function") root.game.askTheBard()
+    }
+
     // Send the hero for a walk without opening the panel, so it can sit on a
     // keybind. Refused, silently, when the hero is busy or has already had
     // their three today — the same rule the button follows.

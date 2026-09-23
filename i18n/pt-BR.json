@@ -317,7 +317,7 @@
   "bard.title": "A Canção do Bardo",
   "bard.ask": "Consultar o Bardo",
   "bard.asked": "O Bardo já cantou hoje.",
-  "bard.prompt": "Você está escrevendo uma entrada curta de crônica para o plugin Omaquest. Leia {save} e {chronicle}, que são JSON. Escreva cerca de 150 palavras sobre o dia mais recente, na voz de um bardo medieval, no idioma de código {language}. Salve em {out}, criando o diretório se preciso. Não modifique nenhum outro arquivo, não rode nenhum outro comando, e não reporte nada de volta.",
+  "bard.prompt": "Leia o arquivo de texto curto {brief} e nada mais. Escreva cerca de 150 palavras em {language}, na voz de um bardo medieval que estava lá, sobre o dia mais recente que ele descreve. Use o nome do herói e o nome do reino. Prefira o formato do dia a uma lista de eventos. Salve como prosa simples em {out}. Não abra nenhum outro arquivo, não rode nenhum outro comando, e não reporte nada de volta.",
   "class.archer.name": "Arqueiro",
   "class.archer.bonus": "Exploração e Combate ×1,25 · Saraivada: duas flechas, a armadura conta duas vezes",
   "skill.volley.name": "Saraivada",
@@ -392,5 +392,9 @@
   "settings.sound_quiet": "Baixo",
   "settings.sound_full": "Alto",
   "chron.arena_lost_xp.0": "{name} cai, e acorda na taverna {xp} de experiência mais pobre.",
-  "chron.arena_lost_xp.1": "Hoje não. {xp} de experiência ficaram na areia."
+  "chron.arena_lost_xp.1": "Hoje não. {xp} de experiência ficaram na areia.",
+  "language.self": "português do Brasil",
+  "bard.brief_title": "A crônica até aqui",
+  "bard.brief_hero": "{name}, nível {level} {title} — um {race} {cls} de {realm}, uma {realmType}.",
+  "bard.brief_state": "Vida {hp} de {hpMax}. {gold} de ouro. Sequência de Selos: {streak}."
 }
