@@ -329,6 +329,84 @@ var ACHIEVEMENTS = [
   "chameleon", "smith", "collector", "constant", "traveller", "myth"
 ]
 
+// What each feat wants, so the panel can show how far along you are rather
+// than only the name of something you may never have understood.
+//
+// `target` 0 means there is nothing to count: you have beaten a guardian or
+// you have not, and "0 / 1" says less than the sentence does.
+//
+// The source of each number is written down here because it is the thing
+// nobody can work out from the screen — some count a day, some count a life,
+// and a feat that quietly resets at midnight is worse than no feat at all.
+var ACHIEVEMENT_GOALS = {
+  first_blood:     { target: 0,   scope: "once" },
+  survivor:        { target: 0,   scope: "once" },
+  guardian_slayer: { target: 0,   scope: "once" },
+  marathon:        { target: 480, scope: "day"  },
+  explorer:        { target: 10,  scope: "day"  },
+  melomaniac:      { target: 120, scope: "day"  },
+  chameleon:       { target: 5,   scope: "day"  },
+  smith:           { target: 5,   scope: "life" },
+  collector:       { target: 6,   scope: "now"  },
+  constant:        { target: 7,   scope: "now"  },
+  traveller:       { target: 10,  scope: "life" },
+  myth:            { target: MAX_LEVEL, scope: "now" }
+}
+
+// How far along one feat is, read out of the world the same way the event
+// that grants it reads it. Written once, here, so the bar and the rule can
+// never drift apart and promise a feat that will not arrive.
+function achievementProgress(world, id) {
+  if (!world) return 0
+
+  var counters = (world.day && world.day.counters) ? world.day.counters : {}
+  var stats = world.stats || {}
+  var hero = world.hero || {}
+
+  switch (id) {
+    case "marathon":   return num(counters.sessionMin)
+    case "explorer":   return num(counters.workspaces)
+    case "melomaniac": return num(counters.musicMinutes)
+    case "chameleon":  return num(counters.themes)
+    case "smith":      return num(stats.forged)
+    case "traveller":  return num(stats.expeditions)
+    case "constant":   return world.streak ? num(world.streak.count) : 0
+    case "myth":       return num(hero.level)
+    case "collector":
+      var held = 0
+      for (var i = 0; i < MATERIALS.length; i++)
+        if (num((hero.materials || {})[MATERIALS[i]]) > 0) held += 1
+      return held
+  }
+  return 0
+}
+
+// Every feat, earned first and in the order they are defined, each with what
+// it wants and how far along it is.
+function achievementBoard(world) {
+  var earned = (world && world.achievements) ? world.achievements : []
+  var out = []
+
+  for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+    var id = ACHIEVEMENTS[i]
+    var goal = ACHIEVEMENT_GOALS[id] || { target: 0, scope: "once" }
+    var done = earned.indexOf(id) !== -1
+    out.push({
+      id: id,
+      done: done,
+      scope: goal.scope,
+      target: goal.target,
+      // A finished feat reads as full even if the counter it watched has
+      // since rolled over: the day's workspaces go back to zero at midnight,
+      // and an Explorer does not stop being one.
+      progress: done ? goal.target : clamp(achievementProgress(world, id), 0, goal.target)
+    })
+  }
+
+  out.sort(function (a, b) { return (a.done === b.done) ? 0 : (a.done ? -1 : 1) })
+  return out
+}
+
 // ---------------------------------------------------------------- utilities
 
 // Anything read off disk goes through here before it is used in arithmetic. A
@@ -1137,6 +1215,8 @@ if (typeof module !== "undefined" && module.exports) {
     MAX_CHRONICLE_ENTRIES: MAX_CHRONICLE_ENTRIES, MAX_WORKSPACE_IDS: MAX_WORKSPACE_IDS, QUEST_POOL: QUEST_POOL,
     EXPEDITIONS: EXPEDITIONS, DESTINATIONS: DESTINATIONS, ENCOUNTER_CHANCE: ENCOUNTER_CHANCE,
     RECIPES: RECIPES, ACHIEVEMENTS: ACHIEVEMENTS,
+    ACHIEVEMENT_GOALS: ACHIEVEMENT_GOALS,
+    achievementProgress: achievementProgress, achievementBoard: achievementBoard,
     MATERIAL_PRICE: MATERIAL_PRICE, MERCHANT_OFFERS: MERCHANT_OFFERS,
     POTIONS: POTIONS, POTION_SPEC: POTION_SPEC, MAX_POTIONS: MAX_POTIONS, potionSpec: potionSpec,
     SELL_PER_TIER: SELL_PER_TIER, itemValue: itemValue, merchantStock: merchantStock,

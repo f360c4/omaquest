@@ -422,29 +422,6 @@ Item {
 
     PanelSeparator { width: parent.width }
 
-    // ---- What has been earned.
-    Flow {
-      width: parent.width
-      spacing: Style.space(6)
-      visible: !!root.world && (root.world.achievements || []).length > 0
-
-      Repeater {
-        model: root.world ? root.world.achievements : []
-
-        Text {
-          required property string modelData
-          textFormat: Text.PlainText
-          text: root.t("achievement." + modelData + ".name")
-          color: Color.accent
-          font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
-          renderType: Text.NativeRendering
-        }
-      }
-    }
-
-    PanelSeparator { width: parent.width }
-
     // ---- Purse and streak.
     Item {
       width: parent.width

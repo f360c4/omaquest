@@ -405,5 +405,21 @@
   "settings.calling_confirm": "Become a {cls}? It costs {gold} gold and there is no refund. Your level, experience, gear and gold stay as they are; the attributes re-derive for the new calling, so some go up and some go down.",
   "settings.calling_change": "Change calling",
   "ui.chest": "In the chest",
-  "ui.chest_empty": "Nothing put away. What you forge and what you do not wear ends up here."
+  "ui.chest_empty": "Nothing put away. What you forge and what you do not wear ends up here.",
+  "ui.tab_feats": "Feats",
+  "ui.feats": "Feats",
+  "ui.feats_note": "Earned once and kept for good — even through a rebirth. Everything below is read from this machine.",
+  "ui.feat_earned": "earned",
+  "achievement.first_blood.note": "Win your first fight in the arena.",
+  "achievement.survivor.note": "Beat a boss born from a crash — a program that really did go down on this machine.",
+  "achievement.guardian_slayer.note": "Beat the Guardian, who turns up on his own every weekend.",
+  "achievement.marathon.note": "Eight hours of session in one day.",
+  "achievement.explorer.note": "Ten different workspaces in one day.",
+  "achievement.melomaniac.note": "Two hours of music playing in one day.",
+  "achievement.chameleon.note": "Change theme five times in one day.",
+  "achievement.smith.note": "Forge five items. Counts for your whole life, not the day.",
+  "achievement.collector.note": "Hold at least one of all six materials at the same time.",
+  "achievement.constant.note": "Seal the day seven days running.",
+  "achievement.traveller.note": "Finish ten expeditions.",
+  "achievement.myth.note": "Reach level 30, which is the ceiling."
 }

@@ -58,6 +58,7 @@ Panel {
       { id: "hero", label: root.t("ui.tab_hero"), marked: false },
       { id: "gear", label: root.t("ui.tab_gear"), marked: false },
       { id: "chronicle", label: root.t("ui.tab_chronicle"), marked: false },
+      { id: "feats", label: root.t("ui.tab_feats"), marked: false },
       { id: "arena", label: root.t("ui.tab_arena"), marked: root.arenaUnseen },
       { id: "expedition", label: root.t("ui.tab_expedition"), marked: root.expeditionUnseen },
       { id: "forge", label: root.t("ui.tab_forge"), marked: false },
@@ -260,6 +261,18 @@ Panel {
             active: root.serviceReady && root.hasHero && root.tab === "chronicle"
             visible: active
             sourceComponent: ChronicleView {
+              game: root.game
+              foreground: root.contentForeground
+              fontFamily: root.contentFontFamily
+            }
+          }
+
+          Loader {
+            id: featsView
+            width: parent.width
+            active: root.serviceReady && root.hasHero && root.tab === "feats"
+            visible: active
+            sourceComponent: FeatsView {
               game: root.game
               foreground: root.contentForeground
               fontFamily: root.contentFontFamily

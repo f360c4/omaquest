@@ -19,11 +19,20 @@ Item {
 
   readonly property real clamped: Math.max(0, Math.min(1, fraction))
 
-  implicitHeight: caption.implicitHeight + Style.space(3) + track.height
+  // A bar with nothing written over it is just a bar: the caption row
+  // collapses rather than leaving a line of empty space above it, which is
+  // what the feats want — the name is already above them.
+  readonly property bool titled: label.length > 0 || valueText.length > 0
+
+  implicitHeight: (titled ? caption.implicitHeight + Style.space(3) : 0) + track.height
 
   Text {
     id: caption
     width: parent.width
+    visible: root.titled
+    // Hidden is not gone: an invisible item keeps its geometry, and the track
+    // anchors to the bottom of this one.
+    height: root.titled ? implicitHeight : 0
     textFormat: Text.PlainText
     text: root.label
     color: Qt.darker(root.foreground, 1.4)
@@ -34,6 +43,7 @@ Item {
 
   Text {
     id: value
+    visible: root.titled
     anchors.right: parent.right
     anchors.top: parent.top
     textFormat: Text.PlainText
@@ -49,7 +59,7 @@ Item {
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: caption.bottom
-    anchors.topMargin: Style.space(3)
+    anchors.topMargin: root.titled ? Style.space(3) : 0
     height: root.compact ? Style.space(4) : Style.space(6)
     radius: height / 2
     color: Util.alpha(root.foreground, 0.15)

@@ -1413,6 +1413,42 @@ test("selling takes from the chest, pays by tier, and never touches what is worn
   assertEqual(worn.state.hero.gold, state.hero.gold, "and nothing was paid for it")
 })
 
+test("the feat board reads the same numbers the events that grant them read", () => {
+  // The board is a second opinion on every feat, and a second opinion is only
+  // worth having while it agrees: a bar that fills to 10/10 without the feat
+  // arriving is worse than no bar.
+  const state = freshState("human", "warrior")
+  state.day.counters.workspaces = 7
+  state.day.counters.sessionMin = 480
+  state.stats.forged = 3
+  state.streak.count = 2
+  state.hero.level = 9
+
+  const board = Rules.achievementBoard(state)
+  const by = id => board.find(f => f.id === id)
+
+  assertEqual(board.length, Rules.ACHIEVEMENTS.length, "every feat is on it")
+  assertEqual(by("explorer").progress, 7, "workspaces come from the day")
+  assertEqual(by("explorer").target, 10, "and the rule says ten")
+  assertEqual(by("smith").progress, 3, "forging counts for a life")
+  assertEqual(by("constant").progress, 2, "the streak is read as it stands")
+  assertEqual(by("myth").target, Rules.MAX_LEVEL, "the ceiling is the ceiling")
+  assertEqual(by("first_blood").target, 0, "nothing to count on a first win")
+
+  // Six materials held at once, which is the whole of that one.
+  for (const m of Rules.MATERIALS) state.hero.materials[m] = 1
+  assertEqual(Rules.achievementBoard(state).find(f => f.id === "collector").progress, 6,
+    "one of each")
+
+  // A day's counter rolls over at midnight; a feat earned does not roll back.
+  state.achievements = ["explorer"]
+  state.day.counters.workspaces = 0
+  const earned = Rules.achievementBoard(state).find(f => f.id === "explorer")
+  assertEqual(earned.done, true, "still earned")
+  assertEqual(earned.progress, earned.target, "and still reads full")
+  assertEqual(Rules.achievementBoard(state)[0].done, true, "earned ones sort first")
+})
+
 test("a second copy survives selling the first, and the count is conserved", () => {
   // The chest is a list with repeats, and the panel now prints how many of a
   // thing is in it. That number is only worth printing if the events keep it

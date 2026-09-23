@@ -405,5 +405,21 @@
   "settings.calling_confirm": "Virar {cls}? Custa {gold} de ouro e não tem reembolso. Seu nível, experiência, equipamento e ouro continuam como estão; os atributos são recalculados para o novo chamado, então alguns sobem e outros descem.",
   "settings.calling_change": "Trocar de chamado",
   "ui.chest": "No baú",
-  "ui.chest_empty": "Nada guardado. O que você forja e o que não está vestindo para aqui."
+  "ui.chest_empty": "Nada guardado. O que você forja e o que não está vestindo para aqui.",
+  "ui.tab_feats": "Feitos",
+  "ui.feats": "Feitos",
+  "ui.feats_note": "Ganhos uma vez e guardados para sempre — nem renascer tira. Tudo aqui embaixo é lido desta máquina.",
+  "ui.feat_earned": "ganho",
+  "achievement.first_blood.note": "Vença a sua primeira luta na arena.",
+  "achievement.survivor.note": "Derrote um boss nascido de um crash — um programa que caiu de verdade nesta máquina.",
+  "achievement.guardian_slayer.note": "Derrote o Guardião, que aparece sozinho todo fim de semana.",
+  "achievement.marathon.note": "Oito horas de sessão num só dia.",
+  "achievement.explorer.note": "Dez workspaces diferentes num só dia.",
+  "achievement.melomaniac.note": "Duas horas de música tocando num só dia.",
+  "achievement.chameleon.note": "Troque de tema cinco vezes num só dia.",
+  "achievement.smith.note": "Forje cinco itens. Conta a vida toda, não o dia.",
+  "achievement.collector.note": "Tenha ao mesmo tempo pelo menos um de cada um dos seis materiais.",
+  "achievement.constant.note": "Sele o dia sete dias seguidos.",
+  "achievement.traveller.note": "Complete dez expedições.",
+  "achievement.myth.note": "Chegue ao nível 30, que é o teto."
 }
