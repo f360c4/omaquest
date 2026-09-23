@@ -114,7 +114,7 @@ BarWidget {
 
     // Ask the Bard without opening the panel, so it can sit on a keybind.
     // Refused, silently, if it is switched off, `omarchy` is not installed,
-    // or today already has a song.
+    // or one was asked for in the last minute.
     function bard(): void {
       if (root.game && typeof root.game.askTheBard === "function") root.game.askTheBard()
     }

@@ -401,5 +401,7 @@
   "arena.lost_xp": "-{xp} experience",
   "arena.lost_kept": "Your level, your gold, your gear and your feats are untouched. Only the climb toward this level got shorter.",
   "arena.loot_xp": "+{xp} experience",
-  "bard.again": "Ask again"
+  "bard.again": "Ask again",
+  "settings.calling_confirm": "Become a {cls}? It costs {gold} gold and there is no refund. Your level, experience, gear and gold stay as they are; the attributes re-derive for the new calling, so some go up and some go down.",
+  "settings.calling_change": "Change calling"
 }

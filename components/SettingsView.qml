@@ -22,6 +22,9 @@ Item {
   // shell's API. Panel.qml owns the write because it has the bar.
   signal settingChanged(string key, var value)
 
+  // Which calling the dialog is currently asking about.
+  property string pendingClass: ""
+
   readonly property int revision: game ? game.revision : 0
   readonly property var hero: { revision; return game ? game.hero() : null }
   readonly property var world: { revision; return game ? game.world : null }
@@ -451,7 +454,14 @@ Item {
             selected: current
             enabled: !current && affordable
             opacity: enabled || current ? 1 : 0.45
-            onClicked: if (root.game) root.game.dispatch({ type: "change_class", cls: modelData })
+            // Asked first. This is the one button in the plugin that spends
+            // gold and cannot be undone, and it sat one misclick away from
+            // doing both silently while starting over — which costs nothing —
+            // had a dialog in front of it.
+            onClicked: {
+              root.pendingClass = modelData
+              classDialog.opened = true
+            }
           }
         }
       }
@@ -505,6 +515,28 @@ Item {
 
   // Starting over is the one thing in the plugin that cannot be undone by
   // clicking again, so it is the one thing that asks.
+  ConfirmDialog {
+    id: classDialog
+    message: root.t("settings.calling_confirm", {
+      cls: root.pendingClass ? root.t("class." + root.pendingClass + ".name") : "",
+      gold: World.CLASS_CHANGE_GOLD
+    })
+    cancelText: root.t("settings.cancel")
+    confirmText: root.t("settings.calling_change")
+    foreground: root.foreground
+    fontFamily: root.fontFamily
+    onConfirmed: {
+      classDialog.opened = false
+      if (root.game && root.pendingClass)
+        root.game.dispatch({ type: "change_class", cls: root.pendingClass })
+      root.pendingClass = ""
+    }
+    onCanceled: {
+      classDialog.opened = false
+      root.pendingClass = ""
+    }
+  }
+
   ConfirmDialog {
     id: rebirthDialog
     message: root.t("settings.rebirth_confirm")
