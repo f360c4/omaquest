@@ -635,6 +635,9 @@ function winFight(state, at, random) {
   var isBoss = arena.kind !== "wanderer"
 
   var loot = Rules.combatRewards(state.hero, arena.enemy, state.streak.count, random)
+  // Kept on the fight so the result screen can name it. Otherwise winning is
+  // a line saying "won" and a number that moved somewhere else.
+  arena.loot = loot
   state.hero.gold = Rules.num(state.hero.gold) + loot.gold
   for (var material in loot.materials)
     state.hero.materials[material] = Rules.num(state.hero.materials[material]) + loot.materials[material]
@@ -688,6 +691,11 @@ function loseFight(state, at) {
 
   var lost = Math.floor(Rules.num(state.hero.xp) * DEFEAT_XP_LOSS)
   state.hero.xp = Math.max(0, Rules.num(state.hero.xp) - lost)
+
+  // Recorded on the fight itself, so the screen that shows the loss can also
+  // show what it cost. A number that changed while you were looking at a
+  // different tab is a number you have to go and find.
+  if (state.arena) state.arena.xpLost = lost
 
   var effects = [effectChronicle(lost > 0 ? "arena_lost_xp" : "arena_lost",
     { xp: lost }, Rules.hash("lost" + at))]

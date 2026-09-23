@@ -86,7 +86,7 @@ Counts and states. Never content.
 | Your theme's colours | The shell's own `Color` singleton | That the theme changed. The colours themselves only tint the hero. |
 | Battery, if there is one | `Quickshell.Services.UPower` | Whether it ran flat and came back. A desktop has no battery and no weather. |
 | Programs that crashed | `coredumpctl list --json=short --no-pager --since @<timestamp>`, every 15 minutes | The **basename of the executable**, which becomes the boss's name, and when. Crashes owned by other users are skipped. **The core file is never opened, the command line is never read, no backtrace is ever taken.** |
-| AI agent usage — **opt-in, off by default** | Files under `~/.local/state/omarchy/agents/usage/`, each through `head -c 65536` | A token total. **Never a prompt, never an answer, and never the help or status text those files also carry.** |
+| AI agent usage — **opt-in, off by default** | Refreshes them with Omarchy's own `omarchy agent usage-update`, then reads the files under `~/.local/state/omarchy/agents/usage/`, each through `head -c 65536` | A token total. **Never a prompt, never an answer, and never the help or status text those files also carry.** |
 | Commits — **opt-in, off by default** | `find ~/Work -maxdepth 2 -name .git -type d`, then `git -C <repo> rev-list --count --since=@<ts> HEAD` per repository, every 30 minutes | A number. **Never a message, a file name, an author, or the name of a repository.** |
 | Its own settings | The plugin's inline entry in `~/.config/omarchy/shell.json`, through the shell's API | Language and the switches below. |
 | Its own save | `~/.local/state/omaquest/save.json` and `chronicle.json`, through `head -c 262144` so the read is bounded whatever the file has become | The hero. |
@@ -107,7 +107,7 @@ shell, never a string concatenated from anything.**
 | `mv <save> <save>.corrupt-<timestamp>.json` | Only when the save cannot be parsed |
 | `coredumpctl list --json=short --no-pager --since @<ts>` | Every 15 minutes, if `coredumpctl` is there |
 | `omarchy-notification-send --app-name omaquest …` | At most twice a day, only for categories left switched on |
-| `ls -l --time-style=+%s <agents/usage>`, then `head -c 65536 <file>` | Every 15 minutes, **only if you switch the agent sensor on**. The timestamps are read to notice when nothing is refreshing those files |
+| `omarchy agent usage-update`, then `ls -l --time-style=+%s <agents/usage>`, then `head -c 65536 <file>` | Every 15 minutes, **only if you switch the agent sensor on**. Omarchy's own command regenerates the usage files (0.9 s); the timestamps are read to notice if they still are not moving |
 | `ls -1 ~/.local/state/omaquest/bard` | At startup and when a song appears, **only if you switch the Bard on**, to know which days have one |
 | `find ~/Work …`, then `git -C <repo> rev-list --count …` | Every 30 minutes, **only if you switch the commit sensor on** |
 | `mkdir -p <state>/bard` and `omarchy agent prompt "<fixed text>"` | **Only when you click "Ask the Bard"**, at most once a day, and only if you switched the Bard on |

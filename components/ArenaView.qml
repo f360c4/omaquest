@@ -77,6 +77,19 @@ Item {
     return value ? value.charAt(0).toUpperCase() + value.slice(1) : ""
   }
 
+  readonly property string lootLine: {
+    revision
+    if (!arena || !arena.loot) return ""
+    var loot = arena.loot
+    var parts = []
+    if (Rules.num(loot.xp) > 0) parts.push(root.t("arena.loot_xp", { xp: Rules.num(loot.xp) }))
+    if (Rules.num(loot.gold) > 0) parts.push(root.t("expedition.loot_gold", { gold: Rules.num(loot.gold) }))
+    for (var material in (loot.materials || {}))
+      parts.push(root.t("material." + material) + " x" + Rules.num(loot.materials[material]))
+    if (loot.item) parts.push(root.t("item." + loot.item + ".name"))
+    return parts.join(" · ")
+  }
+
   function logLine(entry) {
     if (!entry) return ""
     var key = "combat." + String(entry.key)
@@ -313,19 +326,62 @@ Item {
       }
     }
 
-    // ---- The outcome, once there is one.
-    Text {
+    // ---- The outcome, once there is one, and what it cost.
+    Column {
       width: parent.width
+      spacing: Style.space(2)
       visible: !!root.arena && root.arena.outcome !== "ongoing"
-      wrapMode: Text.WordWrap
-      textFormat: Text.PlainText
-      text: root.arena
-        ? (root.arena.outcome === "won" ? root.t("arena.won") : root.t("arena.lost"))
-        : ""
-      color: root.arena && root.arena.outcome === "won" ? Color.accent : Color.urgent
-      font.family: root.fontFamily
-      font.pixelSize: Style.font.body
-      renderType: Text.NativeRendering
+
+      Text {
+        width: parent.width
+        wrapMode: Text.WordWrap
+        textFormat: Text.PlainText
+        text: root.arena
+          ? (root.arena.outcome === "won" ? root.t("arena.won") : root.t("arena.lost"))
+          : ""
+        color: root.arena && root.arena.outcome === "won" ? Color.accent : Color.urgent
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.body
+        renderType: Text.NativeRendering
+      }
+
+      // What a win brought, named rather than left to be noticed.
+      Text {
+        width: parent.width
+        visible: !!root.arena && root.arena.outcome === "won" && root.lootLine !== ""
+        wrapMode: Text.WordWrap
+        textFormat: Text.PlainText
+        text: root.lootLine
+        color: Color.accent
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.bodySmall
+        renderType: Text.NativeRendering
+      }
+
+      // The price, in full, on the screen where it was paid.
+      Text {
+        width: parent.width
+        visible: !!root.arena && Rules.num(root.arena.xpLost) > 0
+        wrapMode: Text.WordWrap
+        textFormat: Text.PlainText
+        text: root.arena ? root.t("arena.lost_xp", { xp: Rules.num(root.arena.xpLost) }) : ""
+        color: Color.urgent
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.bodySmall
+        renderType: Text.NativeRendering
+      }
+
+      Text {
+        width: parent.width
+        visible: !!root.arena && root.arena.outcome === "lost"
+        wrapMode: Text.WordWrap
+        textFormat: Text.PlainText
+        text: root.t("arena.lost_kept")
+        color: Qt.darker(root.foreground, 1.5)
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        renderType: Text.NativeRendering
+      }
     }
 
     // ---- Four buttons, and nothing on a timer.

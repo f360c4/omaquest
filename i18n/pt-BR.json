@@ -296,7 +296,7 @@
   "settings.notifyQuests": "Me avise quando o dia for selado",
   "settings.arcane": "Sensores arcanos",
   "settings.sensorAgents": "Uso de agentes de IA",
-  "settings.sensorAgents_note": "Lê totais de tokens em ~/.local/state/omarchy/agents/usage/. Só números — nunca um prompt, nunca uma resposta. Esses arquivos são escritos pelo widget Agents do próprio Omarchy, então ele precisa estar ligado para isto ver algo novo.",
+  "settings.sensorAgents_note": "Lê totais de tokens em ~/.local/state/omarchy/agents/usage/. Só números — nunca um prompt, nunca uma resposta. O Omaquest atualiza esses arquivos sozinho, então não é preciso ligar mais nada.",
   "settings.sensorGit": "Commits em ~/Work",
   "settings.sensorGit_note": "Conta commits com git rev-list, a cada meia hora, na pasta abaixo. Nunca uma mensagem, um nome de arquivo, um autor, ou o nome de um repositório.",
   "settings.bard": "O Bardo",
@@ -316,7 +316,7 @@
   "chron.reborn.1": "Os registros ficam. Todo o resto começa de novo: {name}, {race} {cls}.",
   "bard.title": "A Canção do Bardo",
   "bard.ask": "Consultar o Bardo",
-  "bard.asked": "O Bardo já cantou hoje.",
+  "bard.asked": "O Bardo já cantou hoje. A canção dele está aí embaixo, sob o dia de hoje.",
   "bard.prompt": "Leia o arquivo de texto curto {brief} e nada mais. Escreva cerca de 150 palavras em {language}, na voz de um bardo medieval que estava lá, sobre o dia mais recente que ele descreve. Use o nome do herói e o nome do reino. Prefira o formato do dia a uma lista de eventos. Salve como prosa simples em {out}. Não abra nenhum outro arquivo, não rode nenhum outro comando, e não reporte nada de volta.",
   "class.archer.name": "Arqueiro",
   "class.archer.bonus": "Exploração e Combate ×1,25 · Saraivada: duas flechas, a armadura conta duas vezes",
@@ -397,6 +397,9 @@
   "bard.brief_title": "A crônica até aqui",
   "bard.brief_hero": "{name}, nível {level} {title} — um {race} {cls} de {realm}, uma {realmType}.",
   "bard.brief_state": "Vida {hp} de {hpMax}. {gold} de ouro. Sequência de Selos: {streak}.",
-  "settings.sensorAgents_stale": "Nada atualiza esses arquivos há horas. Ligue o widget Agents do Omarchy, ou rode `omarchy agent usage-update` — até lá isto lê um número congelado e não rende nada.",
-  "settings.gitPath": "Onde ficam seus repositórios — procurado um nível abaixo, e só por pastas .git"
+  "settings.sensorAgents_stale": "Atualizado, e mesmo assim nada novo. Os coletores de agente não estão produzindo — teste `omarchy agent usage-update` na mão.",
+  "settings.gitPath": "Onde ficam seus repositórios — procurado um nível abaixo, e só por pastas .git",
+  "arena.lost_xp": "-{xp} de experiência",
+  "arena.lost_kept": "Seu nível, seu ouro, seu equipamento e seus feitos estão intactos. Só a subida para este nível ficou mais curta.",
+  "arena.loot_xp": "+{xp} de experiência"
 }

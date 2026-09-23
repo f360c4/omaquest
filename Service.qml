@@ -831,16 +831,29 @@ Item {
   readonly property string agentUsageDir: stateHome + "/omarchy/agents/usage"
   readonly property bool sensorAgents: setting("sensorAgents", false) === true
 
-  // How old the freshest usage file is, in seconds. Worth knowing because the
-  // plugin does not write these — `omarchy agent usage-update` does, and that
-  // is run by Omarchy's own Agents widget. With that widget disabled nothing
-  // refreshes them, the numbers freeze, and this sensor reads a total that
-  // has not moved in days while the player wonders why nothing happens.
+  // The plugin refreshes the usage files itself before reading them.
   //
-  // Which is exactly what happened. So it is detected and said out loud,
-  // rather than being a switch that quietly does nothing.
+  // It did not, at first, and that was wrong: those files are written by
+  // `omarchy agent usage-update`, which Omarchy's own Agents widget runs. With
+  // that widget disabled nothing refreshed them, so this sensor read a total
+  // frozen five days earlier and paid nothing, for ever, silently. Telling the
+  // player to go and enable a second widget is not a fix — it is asking them
+  // to carry the plugin's dependency for it.
+  //
+  // Measured at 0.9 seconds, once every fifteen minutes, and only while the
+  // sensor is switched on. That is worth not making somebody else's problem.
   property double agentDataAge: -1
+
+  // Still stale after a refresh means the collectors themselves are not
+  // producing anything — a different problem, and one worth saying out loud
+  // rather than paying out zero about.
   readonly property bool agentDataStale: sensorAgents && agentDataAge > 21600   // six hours
+
+  Process {
+    id: agentsRefresh
+    command: ["omarchy", "agent", "usage-update"]
+    onExited: if (!agentsList.running) agentsList.running = true
+  }
 
   Process {
     id: agentsList
@@ -945,7 +958,13 @@ Item {
     repeat: true
     running: root.initialized && root.hasHero && root.sensorAgents
     triggeredOnStart: true
-    onTriggered: if (!agentsList.running && !agentReader.running) agentsList.running = true
+    onTriggered: {
+      if (agentsRefresh.running || agentsList.running || agentReader.running) return
+      // Refresh first, then read: reading a file this is about to rewrite
+      // would take the baseline from the stale copy and then pay for the
+      // difference between stale and fresh, which is not a day's work.
+      agentsRefresh.running = true
+    }
   }
 
   // ---- Commits. `git rev-list --count` and nothing else: never a message,

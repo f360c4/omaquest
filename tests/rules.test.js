@@ -602,6 +602,31 @@ test("losing costs progress, never achievement", () => {
   assertEqual(result.state.stats.totalXp, 9000, "and never the lifetime record the feats read")
 })
 
+test("a defeat records what it cost, where the defeat is", () => {
+  let state = freshState("human", "warrior")
+  state.hero.xp = 240
+  const wanderer = Rules.wanderers(state.day.date, state.hero.level)[0]
+  state = World.apply(state, { type: "start_fight", kind: "wanderer", id: wanderer.id }, T0).state
+  state.arena.heroHp = 1
+  state.arena.enemy.atk = 9999
+
+  const result = World.apply(state, { type: "fight_action", action: "attack", random: fixedRandom([0.99, 0.99]) }, T0)
+  assertEqual(result.state.arena.xpLost, 60, "the fight knows what it took")
+  assertEqual(result.state.hero.xp, 180, "and the hero agrees")
+})
+
+test("a win records what it brought, where the win is", () => {
+  let state = freshState("human", "warrior")
+  const wanderer = Rules.wanderers(state.day.date, state.hero.level)[0]
+  state = World.apply(state, { type: "start_fight", kind: "wanderer", id: wanderer.id }, T0).state
+  state.arena.enemyHp = 1
+
+  const result = World.apply(state, { type: "fight_action", action: "attack", random: fixedRandom([0.9, 0.5]) }, T0)
+  assert(!!result.state.arena.loot, "the fight knows what it gave")
+  assert(Rules.num(result.state.arena.loot.xp) > 0, "experience")
+  assert(Rules.num(result.state.arena.loot.gold) > 0, "gold")
+})
+
 test("losing at the very start of a level cannot go below zero", () => {
   let state = freshState()
   state.hero.xp = 0

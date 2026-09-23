@@ -870,3 +870,38 @@ defaulting to `~/Work`, shown in Settings only while the sensor is on. `~` is
 expanded here rather than by a shell, and a path that is not absolute after
 that is refused rather than resolved against whatever the working directory
 happens to be.
+
+### The plugin refreshes the agent data itself
+
+The first fix for the frozen usage files was to detect staleness and tell the
+player to go and enable Omarchy's Agents widget. That is not a fix — it is
+asking somebody to carry the plugin's dependency for it, and the reply was the
+obvious one: *"why do I have to enable that? I use a different usage widget."*
+
+`omarchy agent usage-update` is a first-party command and it takes **0.9
+seconds**. Measured, not assumed. So the sensor runs it before each poll, once
+every fifteen minutes, and only while the sensor is switched on. Nothing else
+has to be enabled for a switch in this plugin to do what it says.
+
+Refresh first, then read: reading a file that is about to be rewritten would
+take the baseline from the stale copy and then pay for the difference between
+stale and fresh, which is not a day's work. On this machine the difference was
+five days and 291 million tokens.
+
+The staleness detection stays, and now means something sharper: **refreshed,
+and still not moving** — which is the collectors failing, a different problem
+worth naming rather than paying zero about.
+
+### A fight has to say what it cost and what it brought
+
+The experience loss worked and was invisible: the number moved on a tab you
+were not looking at. Reported as "I lost about 60 XP" — an estimate, because
+there was nothing to read.
+
+The fight now carries `xpLost` and `loot`, so the result screen prints them
+where the fight happened. A defeat also spells out what it did **not** take,
+because the whole shape of the penalty is the list of things that are safe and
+a player cannot be expected to infer that from a number going down.
+
+Same reasoning for the Bard's button: it used to vanish once the day's song
+existed, which is indistinguishable from the feature breaking. It says so now.

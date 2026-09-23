@@ -77,6 +77,20 @@ Item {
       onClicked: if (root.game) root.game.askTheBard()
     }
 
+    // Said, rather than leaving a button to disappear and nobody to know
+    // whether it worked or the feature broke.
+    Text {
+      width: parent.width
+      visible: root.bardShown && root.bardText.length > 0
+      wrapMode: Text.WordWrap
+      textFormat: Text.PlainText
+      text: root.t("bard.asked")
+      color: Qt.darker(root.foreground, 1.7)
+      font.family: root.fontFamily
+      font.pixelSize: Style.font.caption
+      renderType: Text.NativeRendering
+    }
+
     Text {
       width: parent.width
       visible: root.days.length === 0

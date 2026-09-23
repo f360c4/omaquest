@@ -296,7 +296,7 @@
   "settings.notifyQuests": "Tell me when the day is sealed",
   "settings.arcane": "Arcane sensors",
   "settings.sensorAgents": "AI agent usage",
-  "settings.sensorAgents_note": "Reads token totals from ~/.local/state/omarchy/agents/usage/. Numbers only — never a prompt, never an answer. Those files are written by Omarchy's own Agents widget, so that has to be enabled for this to see anything new.",
+  "settings.sensorAgents_note": "Reads token totals from ~/.local/state/omarchy/agents/usage/. Numbers only — never a prompt, never an answer. Omaquest refreshes those files itself, so nothing else has to be switched on for this to work.",
   "settings.sensorGit": "Commits in ~/Work",
   "settings.sensorGit_note": "Counts commits with git rev-list, every half hour, in the folder below. Never a message, a file name, an author, or the name of a repository.",
   "settings.bard": "The Bard",
@@ -316,7 +316,7 @@
   "chron.reborn.1": "The records stay. Everything else starts over: {name}, {race} {cls}.",
   "bard.title": "The Bard's Song",
   "bard.ask": "Ask the Bard",
-  "bard.asked": "The Bard has already sung today.",
+  "bard.asked": "The Bard has already sung today. Their song is below, under today.",
   "bard.prompt": "Read the short text file {brief} and nothing else. Write about 150 words in {language}, in the voice of a medieval bard who was there, about the most recent day it describes. Use the hero's name and the realm's name. Prefer the shape of the day to a list of events. Save it as plain prose to {out}. Do not open any other file, do not run any other command, and do not report anything back.",
   "class.archer.name": "Archer",
   "class.archer.bonus": "Exploration and Combat ×1.25 · Volley: two arrows, armour pays twice",
@@ -397,6 +397,9 @@
   "bard.brief_title": "The chronicle so far",
   "bard.brief_hero": "{name}, level {level} {title} — a {race} {cls} of {realm}, a {realmType}.",
   "bard.brief_state": "Health {hp} of {hpMax}. {gold} gold. Seal streak: {streak}.",
-  "settings.sensorAgents_stale": "Nothing has refreshed those files in hours. Enable Omarchy's Agents widget, or run `omarchy agent usage-update` — until then this reads a frozen number and earns you nothing.",
-  "settings.gitPath": "Where your repositories are — searched one level deep, and only for .git folders"
+  "settings.sensorAgents_stale": "Refreshed, and still nothing new. The agent collectors are not producing anything — check `omarchy agent usage-update` by hand.",
+  "settings.gitPath": "Where your repositories are — searched one level deep, and only for .git folders",
+  "arena.lost_xp": "-{xp} experience",
+  "arena.lost_kept": "Your level, your gold, your gear and your feats are untouched. Only the climb toward this level got shorter.",
+  "arena.loot_xp": "+{xp} experience"
 }

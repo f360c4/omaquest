@@ -28,6 +28,15 @@ All notable changes to this project are documented here. The format follows
   else's disk.
 
 ### Fixed
+- The AI sensor refreshes the usage files itself with `omarchy agent
+  usage-update` (0.9 s, every 15 minutes, only while switched on), so nothing
+  else has to be enabled for it to work. It used to read whatever Omarchy's
+  Agents widget last wrote, which on a machine with that widget disabled was a
+  number five days old.
+- The arena result now prints what a fight cost and what it brought, and a
+  defeat spells out what it did not take.
+- The Bard's button used to vanish once the day had a song, which looks the
+  same as the feature breaking. It says so instead.
 - The AI sensor could be switched on, do nothing for ever, and say nothing
   about it — the files it reads are written by Omarchy's Agents widget, and
   with that disabled they simply freeze. It now notices and says so.

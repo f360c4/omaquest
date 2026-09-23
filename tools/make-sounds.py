@@ -16,6 +16,13 @@ Karplus-Strong: a burst of noise run through a short delay line, which is what
 a plucked string actually is, and about fifteen lines of arithmetic.
 
 Slow, modal, and quiet enough to sit under a fight rather than over it.
+
+Two things make the difference between "a beep" and "an instrument", and the
+first version had neither: sample rate, so the high partials of a pluck are not
+aliased into grit, and a room. Everything here goes through a small reverb at
+the end — a handful of delayed, quieter copies — because a note with no space
+around it sounds like a circuit and a note with space sounds like a string in
+a hall.
 """
 
 import math
@@ -23,7 +30,7 @@ import pathlib
 import struct
 import wave
 
-RATE = 11025
+RATE = 22050
 OUT = pathlib.Path(__file__).resolve().parent.parent / "assets" / "sounds"
 
 # Equal temperament from A4, by semitones.
@@ -40,7 +47,27 @@ NOTE = {
 }
 
 
-def pluck(frequency, duration, volume=0.22, damping=0.496):
+def reverb(samples, mix=0.34):
+    """A small hall: four delays, each quieter and slightly detuned in length.
+
+    Not a good reverb — a good one needs all-pass chains and diffusion. This
+    is four comb delays, which is enough to stop a plucked note sounding like
+    it was recorded inside a matchbox.
+    """
+    taps = [(int(RATE * 0.037), 0.42), (int(RATE * 0.053), 0.31),
+            (int(RATE * 0.071), 0.23), (int(RATE * 0.097), 0.16)]
+    tail = int(RATE * 0.35)
+    out = list(samples) + [0.0] * tail
+
+    for delay, gain in taps:
+        for i in range(len(samples)):
+            target = i + delay
+            if target < len(out):
+                out[target] += samples[i] * gain * mix
+    return out
+
+
+def pluck(frequency, duration, volume=0.22, damping=0.498):
     """Karplus-Strong: a lute, near enough.
 
     Fill a buffer one wavelength long with noise, then walk it averaging each
@@ -64,8 +91,14 @@ def pluck(frequency, duration, volume=0.22, damping=0.496):
         buffer[index] = (buffer[index] + buffer[(index + 1) % length]) * damping
         index = (index + 1) % length
 
-    # A short release, so a note cut off mid-decay does not click.
-    edge = max(1, int(RATE * 0.02))
+    # A gentler attack than a raw noise burst, which is what made the first
+    # version sound struck rather than plucked.
+    attack = max(1, int(RATE * 0.004))
+    for i in range(min(attack, total)):
+        out[i] *= i / attack
+
+    # And a long release, so a note cut off mid-decay does not click.
+    edge = max(1, int(RATE * 0.04))
     for i in range(min(edge, total)):
         out[total - 1 - i] *= i / edge
     return out
@@ -128,7 +161,7 @@ def write(name, samples):
 # being heard once a fight for months, so it does nothing: no percussion, no
 # resolution, no crescendo. A tune somebody is playing in the corner of the
 # room while the fight happens.
-BEAT = 60.0 / 72
+BEAT = 60.0 / 64
 
 
 def melody_line():
@@ -179,53 +212,74 @@ def drone_line():
                  drone(NOTE["A2"], BEAT * half, 0.045))
 
 
+def harmony_line():
+    """A third above, quieter, entering only on the second half of the phrase.
+
+    One voice for twenty seconds is a tune; two voices, one of them arriving
+    late, is a piece of music. It is the cheapest thing in this file and the
+    one that does the most.
+    """
+    phrase = [
+        (None, 4), (None, 4), (None, 4), (None, 4),
+        ("C5", 2), ("E5", 1), ("F5", 1),
+        ("E5", 2), ("C5", 2),
+        (None, 4),
+        ("F4", 4),
+    ]
+    out = []
+    for note, beats in phrase:
+        duration = BEAT * beats
+        out.extend(silence(duration) if note is None else pluck(NOTE[note], duration, 0.10))
+    return out
+
+
 def battle_theme():
-    return mix(melody_line(), counter_line(), drone_line())
+    return reverb(mix(melody_line(), counter_line(), harmony_line(), drone_line()), 0.40)
 
 
 # ---------------------------------------------------------------- the cues
 
 def hit():
-    return pluck(NOTE["D3"], 0.16, 0.17)
+    return reverb(pluck(NOTE["D3"], 0.22, 0.17), 0.30)
 
 
 def crit():
-    return chain(pluck(NOTE["A3"], 0.10, 0.18), pluck(NOTE["D4"], 0.22, 0.18))
+    return reverb(chain(pluck(NOTE["A3"], 0.10, 0.18), pluck(NOTE["D4"], 0.30, 0.18)), 0.34)
 
 
 def hurt():
-    return chain(pluck(NOTE["C3"], 0.10, 0.15), pluck(NOTE["B2"], 0.26, 0.13))
+    return reverb(chain(pluck(NOTE["C3"], 0.10, 0.15), pluck(NOTE["B2"], 0.34, 0.13)), 0.30)
 
 
 def victory():
-    return chain(
+    return reverb(chain(
         pluck(NOTE["D4"], 0.16, 0.19),
         pluck(NOTE["F4"], 0.16, 0.19),
         pluck(NOTE["A4"], 0.16, 0.19),
-        mix(pluck(NOTE["D5"], 0.70, 0.19), drone(NOTE["D3"], 0.70, 0.05)),
-    )
+        mix(pluck(NOTE["D5"], 0.90, 0.19), drone(NOTE["D3"], 0.90, 0.05)),
+    ), 0.42)
 
 
 def defeat():
-    return chain(
+    return reverb(chain(
         pluck(NOTE["A3"], 0.20, 0.16),
         pluck(NOTE["F3"], 0.20, 0.16),
-        mix(pluck(NOTE["D3"], 0.80, 0.15), drone(NOTE["D3"], 0.80, 0.05)),
-    )
+        mix(pluck(NOTE["D3"], 1.00, 0.15), drone(NOTE["D3"], 1.00, 0.05)),
+    ), 0.42)
 
 
 def found():
     """The hero comes back from a walk with something."""
-    return chain(pluck(NOTE["A4"], 0.12, 0.16), pluck(NOTE["D5"], 0.30, 0.16))
+    return reverb(chain(pluck(NOTE["A4"], 0.12, 0.16), pluck(NOTE["D5"], 0.40, 0.16)), 0.34)
 
 
 def level_up():
-    return chain(
+    return reverb(chain(
         pluck(NOTE["D4"], 0.14, 0.19),
         pluck(NOTE["A4"], 0.14, 0.19),
         pluck(NOTE["D5"], 0.14, 0.19),
-        mix(pluck(NOTE["F5"], 0.80, 0.19), drone(NOTE["D4"], 0.80, 0.05)),
-    )
+        mix(pluck(NOTE["F5"], 1.00, 0.19), drone(NOTE["D4"], 1.00, 0.05)),
+    ), 0.42)
 
 
 SOUNDS = {
