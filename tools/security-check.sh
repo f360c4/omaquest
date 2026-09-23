@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# The release checklist from 05-seguranca-publicacao.md, as a command.
+#
+# Every item here is something a reviewer would look for in a plugin that runs
+# unsandboxed inside someone's shell. Running it is cheaper than remembering
+# it, and it belongs in the repository so the next change has to pass it too.
+set -uo pipefail
+
+cd "$(dirname "$0")/.."
+
+status=0
+code=(*.qml components/*.qml game/*.js)
+
+fail() { echo "  FAIL  $1" >&2; status=1; }
+pass() { echo "  ok    $1"; }
+
+# Comments are stripped first: this file is full of sentences explaining why
+# the plugin does not do these things, and a checklist that trips over its own
+# documentation is a checklist people learn to ignore.
+strip_comments() {
+  sed -E 's,([^:])//.*,\1,; s,^[[:space:]]*//.*,,' "$@"
+}
+
+check_absent() {
+  local label=$1 pattern=$2
+  local hits=""
+  local file
+  for file in "${code[@]}"; do
+    local found
+    found=$(strip_comments "$file" | grep -nE "$pattern" | sed "s|^|$file:|" || true)
+    [ -n "$found" ] && hits="$hits$found"$'\n'
+  done
+  hits=$(printf '%s' "$hits" | sed '/^$/d')
+  if [ -n "$hits" ]; then
+    fail "$label"
+    printf '%s\n' "$hits" | sed 's/^/        /' >&2
+  else
+    pass "$label"
+  fi
+}
+
+echo "Omaquest security checklist"
+echo
+
+check_absent "no shell invocation"        '\bbash[[:space:]]+-[lc]|\bsh[[:space:]]+-c|/bin/sh'
+check_absent "no network"                 'XMLHttpRequest|\bcurl\b|\bwget\b|checkupdates|WebSocket|\.open\("GET|Qt\.openUrlExternally'
+check_absent "no privilege escalation"    '\bsudo\b|\bpkexec\b|\bdoas\b'
+check_absent "no window titles or media metadata" 'toplevel\.title|activeToplevel\.title|lastIpcObject|trackTitle|trackArtist|\.metadata|windowTitle'
+check_absent "no notify-send"             'notify-send'
+check_absent "no rich text in the panel"  'textFormat:[[:space:]]*Text\.(RichText|StyledText|AutoText)'
+check_absent "no eval"                    '\beval\(|new[[:space:]]+Function\('
+
+# Files are written through exactly two FileViews, both pointed at the state
+# directory. Any other setText would be a write nobody declared.
+stray_writes=$(grep -rnoE '[A-Za-z_]+\.setText\(' "${code[@]}" 2>/dev/null \
+  | grep -vE '(saveFile|chronicleFile)\.setText' || true)
+if [ -n "$stray_writes" ]; then
+  fail "files are written only through saveFile and chronicleFile"
+  printf '%s\n' "$stray_writes" | sed 's/^/        /' >&2
+else
+  pass "files are written only through saveFile and chronicleFile"
+fi
+
+# Both of those point inside the state directory and nowhere else.
+if grep -q 'path: root.savePath' Service.qml && grep -q 'path: root.chroniclePath' Service.qml \
+   && grep -q 'readonly property string savePath: stateDir' Service.qml \
+   && grep -q 'readonly property string chroniclePath: stateDir' Service.qml; then
+  pass "both writers point inside the state directory"
+else
+  fail "both writers point inside the state directory"
+fi
+
+# Every detached command starts with a program this README lists.
+allowed='mkdir|root\.notifyBin|"omarchy"'
+detached=$(grep -rn -A1 'execDetached(\[' "${code[@]}" 2>/dev/null \
+  | grep -vE 'execDetached\(\[$|^--' | grep -E '^\S+:[0-9]+[:-]' \
+  | grep -vE "execDetached\\(\\[\"?($allowed)" | grep -vE "^[^:]+:[0-9]+-[[:space:]]*(\"?($allowed))" || true)
+if [ -n "$detached" ]; then
+  fail "every detached command is one the README lists"
+  printf '%s\n' "$detached" | sed 's/^/        /' >&2
+else
+  pass "every detached command is one the README lists"
+fi
+
+# Every Process command is a literal array.
+bad_process=$(grep -rn -A2 'Process {' "${code[@]}" 2>/dev/null \
+  | grep -E 'command:' | grep -vE 'command: \[' || true)
+if [ -n "$bad_process" ]; then
+  fail "every Process command is a literal array"
+  printf '%s\n' "$bad_process" | sed 's/^/        /' >&2
+else
+  pass "every Process command is a literal array"
+fi
+
+# No symlinks: the Omarchy validator rejects them.
+links=$(find . -type l -not -path './.git/*' 2>/dev/null || true)
+[ -z "$links" ] && pass "no symlinks" || { fail "no symlinks"; printf '%s\n' "$links" | sed 's/^/        /' >&2; }
+
+# Nothing binary except the preview images.
+binaries=$(find . -type f -not -path './.git/*' -not -name '*.png' \
+  -exec file --mime-type {} \; 2>/dev/null \
+  | grep -vE 'text/|inode/|application/json' || true)
+[ -z "$binaries" ] && pass "no binaries but the previews" \
+  || { fail "no binaries but the previews"; printf '%s\n' "$binaries" | sed 's/^/        /' >&2; }
+
+# The three opt-ins are off in the manifest.
+for key in sensorAgents sensorGit bardEnabled; do
+  value=$(jq -r --arg k "$key" '.barWidget.defaults[$k]' manifest.json)
+  schema=$(jq -r --arg k "$key" '.barWidget.schema[] | select(.key == $k) | .defaultValue' manifest.json)
+  if [ "$value" = "false" ] && [ "$schema" = "false" ]; then
+    pass "$key defaults to off, in defaults and in schema"
+  else
+    fail "$key defaults to off (defaults=$value schema=$schema)"
+  fi
+done
+
+# The manifest version matches the newest changelog heading.
+manifest_version=$(jq -r .version manifest.json)
+changelog_version=$(grep -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md | head -1 | tr -d '## []')
+if [ "$manifest_version" = "$changelog_version" ]; then
+  pass "manifest version $manifest_version matches the changelog"
+else
+  fail "manifest says $manifest_version, changelog says ${changelog_version:-nothing}"
+fi
+
+echo
+[ "$status" -eq 0 ] && echo "checklist clean" || echo "checklist FAILED" >&2
+exit "$status"
