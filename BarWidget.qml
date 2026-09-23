@@ -112,6 +112,13 @@ BarWidget {
     function hide(): void { root.close() }
     function toggle(): void { root.togglePanel() }
 
+    // Send the hero for a walk without opening the panel, so it can sit on a
+    // keybind. Refused, silently, when the hero is busy or has already had
+    // their three today — the same rule the button follows.
+    function stroll(): void {
+      if (root.game && typeof root.game.startStroll === "function") root.game.startStroll()
+    }
+
     // Open on a named tab, which is how a notification's click can land on
     // the thing it was about.
     function tab(name: string): void {

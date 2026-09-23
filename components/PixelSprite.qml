@@ -28,7 +28,15 @@ Item {
 
   property string body: ""        // a race: human, dwarf, elf, orc, automaton
   property string overlay: ""     // a class: warrior, rogue, bard, druid, mage
-  property string anim: "idle"    // idle | walk | fight | hurt | sleep | cheer
+  // idle | wounded | walk | fight | hurt | sleep | cheer.
+  //
+  // `hurt` is a flinch: a short blink, driven by the service's transient
+  // animation timer, and over in well under a second. `wounded` is the state
+  // of being low on health, and it does not blink at all — it is a slower
+  // breath and a body that sits a pixel lower. A sprite that blinks for as
+  // long as health is low blinks for half an hour, and nobody wants a bar
+  // widget flashing at them while they work.
+  property string anim: "idle"
   property color tint: "white"
   property bool mirrored: false
 
@@ -50,7 +58,9 @@ Item {
       case "fight": return 350
       case "sleep": return 1200
       case "cheer": return 250
-      case "hurt": return 120
+      case "hurt": return 110
+      case "flourish": return 220
+      case "wounded": return 1500
       default: return 900
     }
   }
@@ -65,7 +75,7 @@ Item {
   // The generic effect laid over the body, if this animation has one.
   readonly property string effectSet: {
     if (anim === "sleep") return "fx_sleep"
-    if (anim === "cheer") return "fx_cheer"
+    if (anim === "cheer" || anim === "flourish") return "fx_cheer"
     return ""
   }
 
@@ -78,8 +88,16 @@ Item {
     return 0
   }
 
+  // Being wounded shows as posture rather than as motion: the whole body sits
+  // one pixel lower, which at 16 across reads as slumped and costs nothing to
+  // look at.
+  readonly property int bodyOffsetY: anim === "wounded" ? 1 : 0
+
+  // A flourish pushes whatever the class carries out in front of them — the
+  // warrior's sword, the mage's staff, the archer's bow — which is the whole
+  // reason it looks like six different things rather than one.
   readonly property int overlayOffsetX: {
-    if (anim === "fight" && frame === 1) return mirrored ? -1 : 1
+    if ((anim === "fight" || anim === "flourish") && frame === 1) return mirrored ? -1 : 1
     return bodyOffsetX
   }
 
@@ -104,6 +122,7 @@ Item {
 
     property var runs: []
     property int offsetX: 0
+    property int offsetY: 0
 
     anchors.fill: parent
 
@@ -119,7 +138,7 @@ Item {
           : modelData.x
 
         x: Math.round((column + layer.offsetX) * root.cell)
-        y: Math.round(modelData.y * root.cell)
+        y: Math.round((modelData.y + layer.offsetY) * root.cell)
         // Rounded to whole device pixels and a whole cell wide, so
         // neighbouring runs meet without a seam at any scale.
         width: Math.ceil(modelData.w * root.cell)
@@ -127,7 +146,7 @@ Item {
         color: root.tint
         antialiasing: false
         // A one-pixel offset can push a run off the edge of the grid.
-        visible: x >= 0 && x + width <= root.width
+        visible: x >= 0 && x + width <= root.width && y + height <= root.height
       }
     }
   }
@@ -140,12 +159,14 @@ Item {
     Layer {
       visible: root.bodyHolds ? root.heldFrame === "a" : root.frame === 0
       offsetX: root.bodyOffsetX
+      offsetY: root.bodyOffsetY
       runs: { root.bankRevision; return root.bank ? root.bank.runs(root.body, root.anim, "a") : [] }
     }
 
     Layer {
       visible: root.bodyHolds ? root.heldFrame === "b" : root.frame === 1
       offsetX: root.bodyOffsetX
+      offsetY: root.bodyOffsetY
       runs: { root.bankRevision; return root.bank ? root.bank.runs(root.body, root.anim, "b") : [] }
     }
 
@@ -161,12 +182,14 @@ Item {
         Layer {
           visible: root.frame === 0
           offsetX: root.overlayOffsetX
+          offsetY: root.bodyOffsetY
           runs: { root.bankRevision; return root.bank ? root.bank.runs(root.overlay + "_gear", root.anim, "a") : [] }
         }
 
         Layer {
           visible: root.frame === 1
           offsetX: root.overlayOffsetX
+          offsetY: root.bodyOffsetY
           runs: { root.bankRevision; return root.bank ? root.bank.runs(root.overlay + "_gear", root.anim, "b") : [] }
         }
       }

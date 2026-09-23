@@ -70,6 +70,8 @@ function apply(state, event, now) {
     case "collect_expedition": return collectExpedition(next, event, at)
     case "craft": return craft(next, event, at)
     case "equip": return equip(next, event, at)
+    case "buy_material": return buyMaterial(next, event, at)
+    case "sell_item": return sellItem(next, event, at)
     case "change_class": return changeClass(next, event, at)
     case "rebirth": return rebirth(next, event, at)
     case "stroll_found": return strollFound(next, event, at)
@@ -586,6 +588,7 @@ function fightAction(state, event, at) {
   if (action === "skill" && Rules.num(arena.cooldown) > 0) action = "attack"
 
   var random = typeof event.random === "function" ? event.random : Math.random
+  var before = Rules.num(arena.heroHp)
   var step = Rules.combatRound(state.hero, arena, action, random)
 
   arena.heroHp = step.heroHp
@@ -607,8 +610,11 @@ function fightAction(state, event, at) {
 
   if (step.outcome === "won") effects = effects.concat(winFight(state, at, random))
   else if (step.outcome === "lost") effects = effects.concat(loseFight(state, at))
-  else if (arena.heroHp < Rules.hpMax(state.hero) * 0.3)
-    effects.push({ type: "anim", name: "hurt", ms: 700 })
+  else if (step.heroHp < before) {
+    // A flinch, on the blow that landed — not a state that lasts as long as
+    // the health bar is low. Half a second and done.
+    effects.push({ type: "anim", name: "hurt", ms: 500 })
+  }
 
   return { state: state, effects: effects }
 }
@@ -850,15 +856,27 @@ function equip(state, event, at) {
 
 // =================================================================== stroll
 
-// Whether the hero is allowed out. A pure function so the button and the
-// service agree without either asking the other.
+// Whether the hero can go out at all. Only the three things that mean they are
+// genuinely somewhere else: mid-fight, away on an expedition, or face down in
+// the tavern. Everything else is yes, as often as asked — a walk is something
+// you watch because you felt like it, and a button that says "not now" to that
+// is a button that annoys.
 function canStroll(state, at) {
   if (!state || !state.hero) return false
   if (state.arena) return false
   if (state.expedition && !state.expedition.resolved) return false
   if (Rules.num(state.hero.faintedUntil) > at) return false
-  if (Rules.num(state.day.counters.strolls) >= Rules.MAX_STROLLS_PER_DAY) return false
-  return at - Rules.num(state.hero.lastStrollAt) >= Rules.STROLL_COOLDOWN
+  return true
+}
+
+// Whether this particular walk will turn anything up. Separate from whether it
+// can happen at all, because a free walk that always pays a material is a
+// material printer. The tenth walk of the morning still happens; it just comes
+// back empty, which is what a tenth walk should do.
+function strollPays(state, at) {
+  if (!canStroll(state, at)) return false
+  if (Rules.num(state.day.counters.strolls) >= Rules.MAX_STROLL_FINDS_PER_DAY) return false
+  return at - Rules.num(state.hero.lastStrollAt) >= Rules.STROLL_FIND_COOLDOWN
 }
 
 // The walk itself lives entirely in the service and is never written down: if
@@ -867,7 +885,11 @@ function canStroll(state, at) {
 // event, and only arriving is paid for.
 function strollFound(state, event, at) {
   if (!state.hero) return { state: state, effects: [] }
-  if (!canStroll(state, at)) return { state: state, effects: [] }
+
+  // The walk happened either way; this only decides whether it was worth
+  // anything. A walk that pays nothing writes no chronicle line either —
+  // "went out, came back" is not news.
+  if (!strollPays(state, at)) return { state: state, effects: [] }
 
   state.hero.lastStrollAt = at
   state.day.counters.strolls = Rules.num(state.day.counters.strolls) + 1
@@ -886,6 +908,55 @@ function strollFound(state, event, at) {
   effects = effects.concat(advanceQuests(state, at))
   effects.push({ type: "save" })
   return { state: state, effects: effects, found: { material: material, gold: gold } }
+}
+
+// ================================================================ merchant
+
+function buyMaterial(state, event, at) {
+  if (!state.hero) return { state: state, effects: [] }
+
+  var stock = Rules.merchantStock(state.day.date)
+  var offer = null
+  for (var i = 0; i < stock.length; i++) if (stock[i].id === String(event.offer || "")) offer = stock[i]
+  if (!offer) return { state: state, effects: [] }
+  if (Rules.num(state.hero.gold) < offer.gold) return { state: state, effects: [] }
+
+  state.hero.gold = Rules.num(state.hero.gold) - offer.gold
+  state.hero.materials[offer.material] = Rules.num(state.hero.materials[offer.material]) + offer.count
+
+  var effects = [effectChronicle("bought",
+    { name: state.hero.name, material: offer.material, gold: offer.gold },
+    Rules.hash("buy" + offer.id + at))]
+  effects = effects.concat(dailyAchievements(state))
+  effects.push({ type: "save" })
+  return { state: state, effects: effects }
+}
+
+// Only what is in the chest. What the hero is wearing has to be taken off
+// first, which is one click and stops a misclick selling the sword you are
+// holding.
+function sellItem(state, event, at) {
+  if (!state.hero) return { state: state, effects: [] }
+
+  var id = String(event.item || "")
+  var recipe = Rules.recipeById(id)
+  if (!recipe) return { state: state, effects: [] }
+
+  var index = state.hero.chest.indexOf(id)
+  if (index === -1) return { state: state, effects: [] }
+  state.hero.chest.splice(index, 1)
+
+  var gold = Rules.itemValue(recipe)
+  state.hero.gold = Rules.num(state.hero.gold) + gold
+
+  return {
+    state: state,
+    effects: [
+      effectChronicle("sold", { name: state.hero.name, item: id, gold: gold },
+        Rules.hash("sell" + id + at)),
+      { type: "save" }
+    ]
+  }
 }
 
 // ================================================================== changes
@@ -1000,6 +1071,7 @@ if (typeof module !== "undefined" && module.exports) {
     startExpedition: startExpedition, resolveExpedition: resolveExpedition,
     collectExpedition: collectExpedition, craft: craft, equip: equip,
     changeClass: changeClass, rebirth: rebirth, CLASS_CHANGE_GOLD: CLASS_CHANGE_GOLD,
-    canStroll: canStroll, strollFound: strollFound
+    canStroll: canStroll, strollPays: strollPays, strollFound: strollFound,
+    buyMaterial: buyMaterial, sellItem: sellItem
   }
 }

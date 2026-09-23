@@ -128,7 +128,7 @@ Item {
         bordered: true
         enabled: !!root.game && root.game.canStroll
         opacity: enabled ? 1 : 0.45
-        tooltipText: enabled ? root.t("ui.stroll_note") : root.t("ui.stroll_later")
+        tooltipText: root.t("ui.stroll_note")
         onClicked: if (root.game) root.game.startStroll()
       }
 
@@ -138,6 +138,31 @@ Item {
         textFormat: Text.PlainText
         text: root.t("ui.arena_waiting")
         color: Color.accent
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        renderType: Text.NativeRendering
+      }
+
+      // Walking is always allowed while the hero is free; what runs out is
+      // coming back with something. Said out loud rather than hidden in a
+      // tooltip, and phrased as what it is — the walk still happens.
+      Text {
+        anchors.verticalCenter: parent.verticalCenter
+        visible: !root.waitingInArena && !!root.game && root.game.canStroll && !root.game.strollPays
+        textFormat: Text.PlainText
+        text: root.t("ui.stroll_empty")
+        color: Qt.darker(root.foreground, 1.7)
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        renderType: Text.NativeRendering
+      }
+
+      Text {
+        anchors.verticalCenter: parent.verticalCenter
+        visible: !root.waitingInArena && !!root.game && !root.game.canStroll
+        textFormat: Text.PlainText
+        text: root.t("ui.stroll_busy")
+        color: Qt.darker(root.foreground, 1.7)
         font.family: root.fontFamily
         font.pixelSize: Style.font.caption
         renderType: Text.NativeRendering

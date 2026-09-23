@@ -1151,6 +1151,131 @@ test("marking things seen clears the accent dot and nothing else", () => {
   assertEqual(result.state.hero.xp, state.hero.xp, "looking at something is not progress")
 })
 
+// ------------------------------------------------------------------- stroll
+
+test("the hero goes out whenever asked, as often as asked", () => {
+  let state = freshState()
+  assert(World.canStroll(state, T0), "first")
+
+  // Ten walks in a row, all of them allowed.
+  for (let i = 0; i < 10; i++) {
+    state = World.apply(state, { type: "stroll_found" }, T0 + i).state
+    assert(World.canStroll(state, T0 + i), `walk ${i + 1} refused`)
+  }
+})
+
+test("only the first few walks of a day bring anything back", () => {
+  let state = freshState()
+  const gold = state.hero.gold
+
+  // Spread far enough apart to clear the cooldown each time.
+  let at = T0
+  for (let i = 0; i < Rules.MAX_STROLL_FINDS_PER_DAY; i++) {
+    assert(World.strollPays(state, at), `find ${i + 1} should pay`)
+    state = World.apply(state, { type: "stroll_found" }, at).state
+    at += Rules.STROLL_FIND_COOLDOWN
+  }
+
+  assert(!World.strollPays(state, at), "the fourth find is not paid")
+  assert(World.canStroll(state, at), "but the walk still happens")
+
+  const afterEmpty = World.apply(state, { type: "stroll_found" }, at)
+  assertEqual(afterEmpty.effects.length, 0, "and it is not even worth a chronicle line")
+  assertEqual(afterEmpty.state.hero.gold, state.hero.gold, "nor any gold")
+  assert(state.hero.gold > gold, "while the paid ones were worth something")
+})
+
+test("two walks in quick succession pay once", () => {
+  let state = freshState()
+  state = World.apply(state, { type: "stroll_found" }, T0).state
+  const gold = state.hero.gold
+
+  const soon = World.apply(state, { type: "stroll_found" }, T0 + 60)
+  assertEqual(soon.state.hero.gold, gold, "an hour and a half between finds")
+  assert(World.canStroll(soon.state, T0 + 60), "and the walk is still allowed")
+})
+
+test("a hero who is somewhere else does not go for a walk", () => {
+  const fighting = freshState()
+  const wanderer = Rules.wanderers(fighting.day.date, fighting.hero.level)[0]
+  const inArena = World.apply(fighting, { type: "start_fight", kind: "wanderer", id: wanderer.id }, T0).state
+  assert(!World.canStroll(inArena, T0), "not mid-fight")
+
+  const away = freshState()
+  away.expedition = { destId: "long", startedAt: T0, endsAt: T0 + 28800, seed: 1, resolved: false, seen: false, result: null }
+  assert(!World.canStroll(away, T0), "not while away")
+
+  const down = freshState()
+  down.hero.faintedUntil = T0 + Rules.TAVERN_SECONDS
+  assert(!World.canStroll(down, T0), "not from the tavern")
+})
+
+// ----------------------------------------------------------------- merchant
+
+test("the merchant offers the same three things all day, and different ones tomorrow", () => {
+  for (const date of ["2026-09-22", "2026-10-01"]) {
+    assertEqual(JSON.stringify(Rules.merchantStock(date)), JSON.stringify(Rules.merchantStock(date)), date)
+    const stock = Rules.merchantStock(date)
+    assertEqual(stock.length, Rules.MERCHANT_OFFERS, "three offers")
+    const materials = stock.map((o) => o.material)
+    assertEqual(new Set(materials).size, materials.length, "no duplicates")
+    for (const offer of stock) {
+      assert(Rules.MATERIALS.indexOf(offer.material) !== -1, "a real material")
+      assert(offer.count > 0 && offer.gold > 0, "a real price")
+    }
+  }
+  assert(JSON.stringify(Rules.merchantStock("2026-09-22")) !== JSON.stringify(Rules.merchantStock("2026-09-23")),
+    "two days running offered exactly the same thing")
+})
+
+test("buying spends the gold and hands over the materials", () => {
+  const state = freshState()
+  const offer = Rules.merchantStock(state.day.date)[0]
+  state.hero.gold = offer.gold + 5
+  const before = state.hero.materials[offer.material]
+
+  const result = World.apply(state, { type: "buy_material", offer: offer.id }, T0)
+  assertEqual(result.state.hero.gold, 5, "paid")
+  assertEqual(result.state.hero.materials[offer.material], before + offer.count, "delivered")
+})
+
+test("buying without the gold changes nothing", () => {
+  const state = freshState()
+  const offer = Rules.merchantStock(state.day.date)[0]
+  state.hero.gold = offer.gold - 1
+  const before = JSON.stringify(state)
+  assertEqual(JSON.stringify(World.apply(state, { type: "buy_material", offer: offer.id }, T0).state), before,
+    "untouched")
+})
+
+test("selling takes from the chest, pays by tier, and never touches what is worn", () => {
+  let state = freshState("human", "warrior")
+  state.hero.chest = ["iron_sword", "core_sword"]
+  state.hero.equipment.weapon = "rune_blade"
+  const gold = state.hero.gold
+
+  state = World.apply(state, { type: "sell_item", item: "core_sword" }, T0).state
+  assertEqual(state.hero.chest.length, 1, "out of the chest")
+  assertEqual(state.hero.gold, gold + Rules.SELL_PER_TIER * 3, "paid by tier")
+
+  // The worn blade is not in the chest, so selling it does nothing.
+  const worn = World.apply(state, { type: "sell_item", item: "rune_blade" }, T0)
+  assertEqual(worn.state.hero.equipment.weapon, "rune_blade", "still worn")
+  assertEqual(worn.state.hero.gold, state.hero.gold, "and nothing was paid for it")
+})
+
+test("selling something back is worth less than buying its materials again", () => {
+  // The merchant is not a laundry: a loop of forge, sell, buy, forge has to
+  // lose money or it is an infinite one.
+  for (const recipe of Rules.RECIPES) {
+    let materialCost = 0
+    for (const key of Object.keys(recipe.cost))
+      materialCost += Rules.MATERIAL_PRICE[key] * recipe.cost[key]
+    assert(Rules.itemValue(recipe) < materialCost,
+      `${recipe.id} sells for ${Rules.itemValue(recipe)} but its materials cost ${materialCost}`)
+  }
+})
+
 // ------------------------------------------------------ changing and starting over
 
 test("changing class costs gold, keeps the level, and re-derives the attributes", () => {

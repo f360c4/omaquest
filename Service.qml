@@ -129,11 +129,13 @@ Item {
   readonly property string heroAnim: {
     if (transientAnim) return transientAnim
     if (!hasHero) return "idle"
-    if (strolling) return "walk"
+    if (strolling) return strollAnim
     if (world.expedition && !world.expedition.resolved) return "walk"
     if (world.arena) return "fight"
     if (idle) return "sleep"
-    if (Rules.num(world.hero.hp) < Rules.num(world.hero.hpMax) * 0.3) return "hurt"
+    // Low on health is a posture, not a strobe. The flinch is `hurt`, and it
+    // only ever arrives as a transient effect lasting under a second.
+    if (Rules.num(world.hero.hp) < Rules.num(world.hero.hpMax) * 0.3) return "wounded"
     return "idle"
   }
   property bool idle: false
@@ -985,14 +987,28 @@ Item {
 
   // ------------------------------------------------------------- the stroll
 
-  // Forty seconds of the hero walking across the bottom of the screen, because
-  // somebody clicked a button. The walk itself is never written down: if the
-  // shell goes away halfway, nothing happened. Only arriving is an event.
+  // The hero walking across the bottom of the screen, because somebody asked.
+  // The walk itself is never written down: if the shell goes away halfway,
+  // nothing happened. Only arriving with something is an event.
   property bool strolling: false
   property real strollProgress: 0
 
   readonly property bool canStroll: hasHero && !strolling
     && World.canStroll(root.world, Rules.nowSec())
+
+  // Whether this one will turn anything up. Walking is free and unlimited;
+  // finding something is not, and the panel says so rather than pretending.
+  readonly property bool strollPays: hasHero && World.strollPays(root.world, Rules.nowSec())
+
+  // At the far end of the walk, before turning for home, the hero does
+  // whatever their calling does — which looks like six different things
+  // because the gear overlay is what carries it. The thresholds are the same
+  // three legs StrollWindow lays the journey out in.
+  readonly property real strollTurnStart: 0.42
+  readonly property real strollTurnEnd: 0.58
+
+  readonly property string strollAnim:
+    strollProgress > strollTurnStart && strollProgress < strollTurnEnd ? "flourish" : "walk"
 
   function startStroll() {
     if (!canStroll) return
@@ -1008,7 +1024,10 @@ Item {
     from: 0
     to: 1
     duration: Rules.STROLL_SECONDS * 1000
-    easing.type: Easing.InOutSine
+    // Linear: the hero walks at a steady pace and stops for the flourish
+    // because the flourish says so, not because an easing curve slowed them
+    // down in the middle of a straight line.
+    easing.type: Easing.Linear
     onFinished: {
       root.strolling = false
       root.strollProgress = 0
@@ -1172,6 +1191,10 @@ Item {
         idle: root.idle,
         playing: root.anythingPlaying,
         battery: root.hasBattery,
+        strolling: root.strolling,
+        strollProgress: Math.round(root.strollProgress * 100) / 100,
+        canStroll: root.canStroll,
+        screensReady: root.screensReady,
         coredump: root.coredumpDebug,
         workspacesToday: Rules.num(root.world.day.counters.workspaces),
         appsToday: Rules.num(root.world.day.counters.apps),

@@ -323,8 +323,7 @@
   "skill.volley.name": "Volley",
   "combat.skill_volley": "Two arrows, one breath — {damage}.",
   "ui.stroll": "Stretch their legs",
-  "ui.stroll_note": "Forty seconds across the screen. They usually come back with something.",
-  "ui.stroll_later": "Not just now — three walks a day, and an hour and a half between them.",
+  "ui.stroll_note": "A walk across the screen. Whenever you like — they bring something back a few times a day.",
   "ui.arena_waiting": "Something is waiting in the Arena",
   "chron.strolled.0": "{name} walks the walls and comes back with {material} and {gold} gold.",
   "chron.strolled.1": "A turn around {realm}. Found: {material}, and {gold} gold nobody was counting.",
@@ -347,5 +346,14 @@
   "digest.arcane_tick.one": "1 turn of an unseen familiar",
   "digest.arcane_tick.other": "{n} turns of an unseen familiar",
   "digest.commit.one": "1 rune carved",
-  "digest.commit.other": "{n} runes carved"
+  "digest.commit.other": "{n} runes carved",
+  "forge.merchant": "A merchant, passing through",
+  "forge.buy": "Buy · {gold}g",
+  "forge.sell": "Sell · {gold}g",
+  "chron.bought.0": "{name} buys {material} from a passing merchant for {gold} gold.",
+  "chron.bought.1": "Coin changes hands: {material}, {gold} gold.",
+  "chron.sold.0": "{item} goes to the merchant for {gold} gold.",
+  "chron.sold.1": "{name} parts with {item}. {gold} gold the richer.",
+  "ui.stroll_empty": "They will go, but they have already found today's",
+  "ui.stroll_busy": "Busy elsewhere"
 }

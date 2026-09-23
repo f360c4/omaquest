@@ -177,13 +177,17 @@ var REST_SECONDS = 300                 // idle this long counts as a rest
 var DEEP_REST_SECONDS = 900            // idle this long heals to full
 var TAVERN_SECONDS = 1800              // fainted, then back at half health
 
-// ---- The stroll. Costs nothing, is never asked for, and is the only thing in
-// the game that happens on the screen rather than in the panel. Capped so that
-// it stays a thing you do when you feel like it rather than a thing you do
-// three hundred times.
-var STROLL_SECONDS = 40
-var STROLL_COOLDOWN = 5400             // an hour and a half between walks
-var MAX_STROLLS_PER_DAY = 3
+// ---- The stroll. The only thing in the game that happens on the screen
+// rather than in the panel, and the only one with no cost at all.
+//
+// Walking is unlimited: it is a thing you do because you felt like watching
+// it, and a button that says "not now" to that is a button that annoys. What
+// is rationed is **finding something** — otherwise a free walk that pays a
+// material is a material printer. So the hero goes out whenever asked, and
+// comes back with something at most three times a day.
+var STROLL_SECONDS = 26
+var STROLL_FIND_COOLDOWN = 5400        // an hour and a half between finds
+var MAX_STROLL_FINDS_PER_DAY = 3
 
 // ---- Arena.
 var MAX_ACTIVE_BOSSES = 3
@@ -247,6 +251,50 @@ var RECIPES = [
   { id: "theme_prism", slot: "amulet", tier: 2, cost: { crystal: 4, oil: 1 }, stats: { cha: 1, goldBonus: 0.10 } },
   { id: "core_sigil", slot: "amulet", tier: 3, cost: { core: 1, crystal: 3 }, stats: { wis: 2, xpBonus: 0.05 } }
 ]
+
+// ---- The merchant.
+//
+// Gold had nowhere to go: you could change calling once and that was it, while
+// the chest filled with whatever a better sword replaced. So somebody passes
+// through with three things to sell, drawn from the date like everything else
+// that is "today's", and will take the old gear off your hands.
+//
+// The point is not an economy. It is that being one iron short of a recipe
+// should be solvable by having fought, rather than by waiting for the right
+// drop.
+var MATERIAL_PRICE = {
+  iron: 14, wood: 10, feather: 18, crystal: 26, oil: 20, core: 70
+}
+
+var MERCHANT_OFFERS = 3
+
+// Selling returns gold rather than materials, and less than buying the same
+// thing back would cost — the merchant is not a laundry.
+var SELL_PER_TIER = 30
+
+function itemValue(recipe) {
+  if (!recipe) return 0
+  return SELL_PER_TIER * clamp(num(recipe.tier, 1), 1, 3)
+}
+
+function merchantStock(dateString) {
+  var random = rng(seedFromDate(dateString, "merchant"))
+  var pool = sample(random, MATERIALS, MERCHANT_OFFERS)
+  var out = []
+  for (var i = 0; i < pool.length; i++) {
+    var material = pool[i]
+    // A core is rare enough that it comes one at a time; the rest come in
+    // small handfuls so that buying one is a decision rather than a habit.
+    var count = material === "core" ? 1 : randInt(random, 2, 4)
+    out.push({
+      id: "offer" + i,
+      material: material,
+      count: count,
+      gold: Math.round(num(MATERIAL_PRICE[material], 15) * count * 1.15)
+    })
+  }
+  return out
+}
 
 var ACHIEVEMENTS = [
   "first_blood", "survivor", "guardian_slayer", "marathon", "explorer", "melomaniac",
@@ -993,7 +1041,8 @@ if (typeof module !== "undefined" && module.exports) {
     ENERGY_MAX_DEFAULT: ENERGY_MAX_DEFAULT, ENERGY_MAX_FORTRESS: ENERGY_MAX_FORTRESS,
     REST_ENERGY_COOLDOWN: REST_ENERGY_COOLDOWN, REST_SECONDS: REST_SECONDS,
     DEEP_REST_SECONDS: DEEP_REST_SECONDS, TAVERN_SECONDS: TAVERN_SECONDS, STROLL_SECONDS: STROLL_SECONDS,
-    STROLL_COOLDOWN: STROLL_COOLDOWN, MAX_STROLLS_PER_DAY: MAX_STROLLS_PER_DAY,
+    STROLL_FIND_COOLDOWN: STROLL_FIND_COOLDOWN,
+    MAX_STROLL_FINDS_PER_DAY: MAX_STROLL_FINDS_PER_DAY,
     MAX_ACTIVE_BOSSES: MAX_ACTIVE_BOSSES, BOSS_LIFETIME_SECONDS: BOSS_LIFETIME_SECONDS,
     BOSS_MAX_TIER: BOSS_MAX_TIER, BOSS_GROWTH: BOSS_GROWTH, BOSS_EPITHETS: BOSS_EPITHETS,
     WANDERERS_PER_DAY: WANDERERS_PER_DAY, ENEMY_KINDS: ENEMY_KINDS, ENEMY_TIER: ENEMY_TIER,
@@ -1004,6 +1053,8 @@ if (typeof module !== "undefined" && module.exports) {
     MAX_CHRONICLE_ENTRIES: MAX_CHRONICLE_ENTRIES, MAX_WORKSPACE_IDS: MAX_WORKSPACE_IDS, QUEST_POOL: QUEST_POOL,
     EXPEDITIONS: EXPEDITIONS, DESTINATIONS: DESTINATIONS, ENCOUNTER_CHANCE: ENCOUNTER_CHANCE,
     RECIPES: RECIPES, ACHIEVEMENTS: ACHIEVEMENTS,
+    MATERIAL_PRICE: MATERIAL_PRICE, MERCHANT_OFFERS: MERCHANT_OFFERS,
+    SELL_PER_TIER: SELL_PER_TIER, itemValue: itemValue, merchantStock: merchantStock,
     num: num, clamp: clamp, nowSec: nowSec, localDate: localDate, isWeekend: isWeekend,
     isoWeekKey: isoWeekKey, rng: rng, hash: hash, seedFromDate: seedFromDate,
     randInt: randInt, pick: pick, sample: sample, raceOf: raceOf, classOf: classOf,

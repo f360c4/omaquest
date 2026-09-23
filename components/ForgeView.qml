@@ -18,6 +18,13 @@ Item {
 
   readonly property int revision: game ? game.revision : 0
   readonly property var hero: { revision; return game ? game.hero() : null }
+  readonly property var world: { revision; return game ? game.world : null }
+
+  readonly property var stock: {
+    revision
+    if (!world || !world.day) return []
+    return Rules.merchantStock(world.day.date)
+  }
 
   function t(key, vars) {
     return game ? game.t(key, vars) : key
@@ -60,10 +67,27 @@ Item {
       width: parent.width
       spacing: Style.space(3)
 
-      PanelSectionHeader {
-        text: root.t("forge.materials")
-        foreground: root.foreground
-        fontFamily: root.fontFamily
+      Item {
+        width: parent.width
+        height: materialsHeader.implicitHeight
+
+        PanelSectionHeader {
+          id: materialsHeader
+          text: root.t("forge.materials")
+          foreground: root.foreground
+          fontFamily: root.fontFamily
+        }
+
+        Text {
+          anchors.right: parent.right
+          anchors.baseline: materialsHeader.baseline
+          textFormat: Text.PlainText
+          text: root.t("ui.gold", { gold: root.hero ? root.hero.gold : 0 })
+          color: Color.accent
+          font.family: root.fontFamily
+          font.pixelSize: Style.font.caption
+          renderType: Text.NativeRendering
+        }
       }
 
       Flow {
@@ -87,6 +111,68 @@ Item {
         }
       }
     }
+
+    PanelSeparator { width: parent.width }
+
+    // ---- Somebody passing through, placed right under the pack because that
+    //      is what he is about: three things today, the same three all day,
+    //      and he will take the old gear off your hands. Nine recipes between
+    //      the materials and the man selling them is nine recipes of
+    //      scrolling to answer "can I just buy the iron".
+    Column {
+      width: parent.width
+      spacing: Style.space(4)
+
+      PanelSectionHeader {
+        text: root.t("forge.merchant")
+        foreground: root.foreground
+        fontFamily: root.fontFamily
+      }
+
+      Repeater {
+        model: root.stock
+
+        Item {
+          id: offerRow
+          required property var modelData
+
+          readonly property bool affordable: !!root.hero
+            && Rules.num(root.hero.gold) >= modelData.gold
+
+          width: column.width
+          height: Style.space(28)
+          opacity: affordable ? 1 : 0.5
+
+          Text {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.PlainText
+            text: root.t("material." + offerRow.modelData.material)
+              + " ×" + offerRow.modelData.count
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.bodySmall
+            renderType: Text.NativeRendering
+          }
+
+          Button {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.t("forge.buy", { gold: offerRow.modelData.gold })
+            foreground: root.foreground
+            fontFamily: root.fontFamily
+            fontSize: Style.font.bodySmall
+            bordered: true
+            enabled: offerRow.affordable
+            opacity: enabled ? 1 : 0.45
+            onClicked: if (root.game)
+              root.game.dispatch({ type: "buy_material", offer: offerRow.modelData.id })
+          }
+        }
+      }
+    }
+
+    PanelSeparator { width: parent.width }
 
     PanelSeparator { width: parent.width }
 
@@ -169,8 +255,6 @@ Item {
       }
     }
 
-    PanelSeparator { width: parent.width }
-
     // ---- The chest. Everything here can be put on, and putting something on
     //      puts whatever was there back, so nothing is ever lost to a choice.
     Column {
@@ -215,14 +299,28 @@ Item {
             renderType: Text.NativeRendering
           }
 
-          Button {
+          Row {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            text: root.t("forge.equip")
-            foreground: root.foreground
-            fontFamily: root.fontFamily
-            fontSize: Style.font.bodySmall
-            onClicked: if (root.game) root.game.dispatch({ type: "equip", item: chestRow.modelData })
+            spacing: Style.space(4)
+
+            Button {
+              text: root.t("forge.equip")
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              fontSize: Style.font.bodySmall
+              onClicked: if (root.game) root.game.dispatch({ type: "equip", item: chestRow.modelData })
+            }
+
+            Button {
+              text: root.t("forge.sell", {
+                gold: Rules.itemValue(Rules.recipeById(chestRow.modelData))
+              })
+              foreground: Qt.darker(root.foreground, 1.3)
+              fontFamily: root.fontFamily
+              fontSize: Style.font.bodySmall
+              onClicked: if (root.game) root.game.dispatch({ type: "sell_item", item: chestRow.modelData })
+            }
           }
         }
       }

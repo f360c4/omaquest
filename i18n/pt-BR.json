@@ -323,8 +323,7 @@
   "skill.volley.name": "Saraivada",
   "combat.skill_volley": "Duas flechas, um fôlego — {damage}.",
   "ui.stroll": "Esticar as pernas",
-  "ui.stroll_note": "Quarenta segundos atravessando a tela. Costuma voltar com alguma coisa.",
-  "ui.stroll_later": "Agora não — três voltas por dia, e uma hora e meia entre elas.",
+  "ui.stroll_note": "Uma volta pela tela. Quando quiser — trazem alguma coisa algumas vezes por dia.",
   "ui.arena_waiting": "Tem algo esperando na Arena",
   "chron.strolled.0": "{name} dá a volta nas muralhas e traz {material} e {gold} de ouro.",
   "chron.strolled.1": "Uma volta por {realm}. Achou: {material}, e {gold} de ouro que ninguém contava.",
@@ -347,5 +346,14 @@
   "digest.arcane_tick.one": "1 volta de um familiar invisível",
   "digest.arcane_tick.other": "{n} voltas de um familiar invisível",
   "digest.commit.one": "1 runa gravada",
-  "digest.commit.other": "{n} runas gravadas"
+  "digest.commit.other": "{n} runas gravadas",
+  "forge.merchant": "Um mercador, de passagem",
+  "forge.buy": "Comprar · {gold}o",
+  "forge.sell": "Vender · {gold}o",
+  "chron.bought.0": "{name} compra {material} de um mercador de passagem por {gold} de ouro.",
+  "chron.bought.1": "Moeda troca de mão: {material}, {gold} de ouro.",
+  "chron.sold.0": "{item} vai para o mercador por {gold} de ouro.",
+  "chron.sold.1": "{name} se desfaz de {item}. {gold} de ouro mais rico.",
+  "ui.stroll_empty": "Vai assim mesmo, mas já achou o de hoje",
+  "ui.stroll_busy": "Ocupado em outro lugar"
 }

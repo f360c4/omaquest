@@ -4,6 +4,43 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- The Archer, a sixth class, and the first to look through two domains at once
+  rather than one: Exploration and Combat at ×1.25. Volley fires twice, so
+  armour is paid for twice — strong against a slime, poor against a golem.
+- A merchant in the Forge. Three offers a day drawn from the date, and he buys
+  what the chest is full of. Gold finally has somewhere to go.
+- `omarchy-shell f360c4.omaquest stroll`, so the walk can go on a keybind.
+
+### Changed
+- Low health no longer blinks. The flinch is half a second on the blow that
+  lands; being wounded is a slower breath and a body sitting a pixel lower.
+  A bar widget that strobes for half an hour is a bar widget people remove.
+- The stroll follows the focused monitor rather than the largest one, is 64
+  pixels rather than 48, and takes 26 seconds rather than 40. It was working
+  all along and nobody could find it.
+- The hero now goes for a walk **whenever asked**, not three times a day. What
+  is rationed is coming back with something; the tenth walk of the morning
+  still happens and simply finds nothing. Partway across they do whatever their
+  calling does, which looks like six different things because the class overlay
+  carries it.
+- The stroll draws on the Top layer rather than Overlay, so it never covers a
+  fullscreen window.
+- The Chronicle sits second, right after the Hero: it is the tab you open to
+  read, and the part still worth opening in month three.
+- Tabs wrap instead of scrolling, so "Crônica" is no longer hidden behind a
+  gesture in Portuguese.
+
+### Fixed
+- Two sprites were never drawn — `boss_daemon_idle_a` and `slime_idle_a` — so
+  every crash boss and every slime rendered as empty space. `check-sprites.sh`
+  now verifies every name the code can ask for, and found the second itself.
+- Selling a Core Sword paid more than its materials cost, which is a loop that
+  prints gold.
+- "1 portais arcanos": the chronicle's daily summary had no singular.
+
 ## [0.1.0] — 2026-09-23
 
 First release. The hero, the chronicle, the arena, expeditions, the forge and

@@ -480,3 +480,146 @@ the feats stay, because those are the record of having been here and nothing in
 this game should be able to take that back. It is also the only action in the
 plugin that asks before doing it, because it is the only one that clicking
 again does not undo.
+
+## After the first release
+
+### Low health is a posture, not a strobe
+
+`hurt` used to be the animation for *being* below 30% health, and it blinked at
+120 ms for as long as that lasted — which on a bar widget means blinking at
+somebody for half an hour while they work. Split in two:
+
+- **`hurt`** is a flinch. It fires on the blow that lands, runs for 500 ms
+  through the service's transient animation timer, and stops.
+- **`wounded`** is the standing state. It does not blink at all: the body sits
+  one pixel lower and breathes at 1500 ms instead of 900. At sixteen pixels
+  across that reads as slumped, and it costs nothing to look at.
+
+The general rule: a persistent state may change how a sprite *rests*, never
+whether it is *visible*. Anything that blinks has to have an end.
+
+### The archer has two lenses, not one
+
+Adding a sixth class to five domains meant either doubling up a lens or
+inventing a domain. Neither is right for a ranger, so the archer looks through
+**two** domains at ×1.25 rather than one at ×1.5: it covers ground and fights
+at the end of it, and is worse at both than the specialist would be. `CLASSES`
+now carries a `lens` map rather than a single `domain`, which is what made that
+expressible at all.
+
+Volley fires twice, so the enemy's armour is paid for twice: strong against a
+slime, poor against a golem. That is a bow.
+
+### Nobody could find the stroll
+
+Three separate reasons, all mine:
+
+1. The button greys out while an expedition is away, and the reason was only in
+   a tooltip. A greyed button with a hidden reason looks broken. The reason is
+   now written next to it.
+2. It drew on the **largest** output, not the focused one. On a two-monitor
+   desk that is a coin flip, and losing it means the hero walks across the
+   screen nobody is looking at. It now follows `Hyprland.focusedMonitor`.
+3. At 48 pixels along the very bottom edge of a 1920-wide screen, over forty
+   seconds, it is genuinely easy to miss. Now 64 pixels and 26 seconds.
+
+It was working the whole time. `omarchy-shell f360c4.omaquest stroll` exists
+now so it can go on a keybind — and so it can be tested without a click.
+
+### A merchant, because gold had nowhere to go
+
+Gold accumulated with one thing to spend it on (changing calling, once), while
+the chest filled with whatever a better sword replaced. Three offers a day,
+drawn from the date, and he will buy the old gear.
+
+The point is not an economy: it is that being one iron short of a recipe should
+be solvable by having fought, rather than by waiting for the right drop.
+
+A test asserts that **selling an item back is worth less than its materials
+cost**, so forge → sell → buy → forge loses money. It caught a real one on the
+first run: the Core Sword sold for 114 against 112 of materials, which is a
+loop that prints gold. Selling now pays 30 a tier instead of 38.
+
+### `check-sprites` now checks the names the code asks for
+
+It used to compare `index.json` against the directory, and the two agreed
+perfectly about a sprite that had never been drawn. `boss_daemon_idle_a` and
+`slime_idle_a` were both missing, so every crash boss and every slime rendered
+as **empty space** — through four phases, with every check passing.
+
+It now walks the race, class, effect and bestiary lists the code actually uses
+and asserts each file exists. It found the second one by itself.
+
+### The panel survives a plugin hot-reload too
+
+`keepLoaded: true` keeps the service across a rescan, which was already
+written down. It keeps the **panel** as well: editing a view and re-opening the
+panel shows the old component. A `qmllint`-clean edit that appears to do
+nothing is usually this. `omarchy-restart-shell`, not `rescanPlugins`.
+
+### Walking is free; finding something is not
+
+The stroll was capped at three a day with an hour and a half between them, and
+the button greyed out in between. That is the wrong thing to ration: a walk is
+something you watch because you felt like watching it, and a button that says
+"not now" to that is a button that annoys.
+
+Split in two. `canStroll` now only refuses the three states where the hero is
+genuinely somewhere else — mid-fight, away on an expedition, face down in the
+tavern — and says yes to everything else, as often as asked. `strollPays`
+carries the old limit, so the tenth walk of the morning still happens and
+simply comes back empty. An empty walk writes no chronicle line either: "went
+out, came back" is not news.
+
+The panel says which it will be, next to the button, rather than hiding it in a
+tooltip.
+
+### A flourish partway along, and why it looks like six things
+
+A hero who only walks is a hero who is walking. Between 42% and 58% of the way
+across, the sprite switches to `flourish`: fast frames, sparks, and the class
+overlay pushed out in front. The overlay is what makes it read as six different
+things — a sword thrust, a staff raised, a bow drawn, a lute struck — without a
+single extra grid.
+
+### `WlrLayer.Top`, not `Overlay`
+
+Overlay draws above everything, including a fullscreen window, which is exactly
+the moment nobody wants a small figure wandering across their video. Top keeps
+the hero above ordinary windows and out of the way of anything fullscreen. It
+is the layer Omagotchi's pet uses, for the same reason.
+
+Worth saying plainly since it came up: **the hero does not climb anything.** It
+walks the ground in a straight line and leaves. Climbing the edges of windows
+is Omagotchi's behaviour — `RoamWindow.qml` has a `climb` action and a
+`climbSpeed` — and it is not something this plugin does or should.
+
+### Is it light? Measured, and the answer is "below the noise"
+
+Asked directly, and worth writing down properly because two earlier attempts
+produced numbers that were entirely instrument.
+
+Three paired four-minute windows, plugin enabled against plugin disabled, on a
+two-monitor desk carrying a dozen bar plugins:
+
+| | with | without |
+|---|---|---|
+| round 1 | 8.45% | 9.16% |
+| round 2 | 19.45% | 9.93% |
+| round 3 | 5.42% | 10.04% |
+
+And memory: 509 MB with, 517 MB without.
+
+The shell swings by more between one window and the next than the plugin could
+add. One pair came back **lower** with it enabled than without. The memory
+delta is **negative**. Both instruments agree, and what they agree on is that
+Omaquest cannot be resolved against the shell it runs inside.
+
+So the honest claim is not a percentage, it is: **too small to measure against
+a shell that uses half a gigabyte and a tenth of a core on its own.** What can
+be stated exactly is the work — every timer, how often, and what it does — and
+`tools/weight.sh` prints that from the source and fails if a new timer ever
+runs faster than the budget allows.
+
+A real percentage would need a bar carrying nothing else. That is worth doing
+once, on a spare user account, before anyone claims a number in a README.

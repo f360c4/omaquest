@@ -9,20 +9,27 @@ Never interrupts, never punishes, never touches the network.
 
 ![preview](preview.png)
 
-| Hero | Arena | Chronicle |
-|---|---|---|
-| ![](docs/screenshot-hero.png) | ![](docs/screenshot-arena.png) | ![](docs/screenshot-chronicle.png) |
+| Hero | Arena | Chronicle | Forge |
+|---|---|---|---|
+| ![](docs/screenshot-hero.png) | ![](docs/screenshot-arena.png) | ![](docs/screenshot-chronicle.png) | ![](docs/screenshot-forge.png) |
+
+The bosses in that arena are real: `voxtype-vulkan` is tier 4 because it
+genuinely crashed three times on the machine these were taken on, and the
+plugin grew the boss each time.
 
 ## What it is
 
 - A pixel hero on the bar, 1-bit and tinted with your theme, who breathes,
   walks while away, sleeps when you do and cheers on a new level
-- Five races and five classes, and the twenty-five of them look different
+- Five races and six classes, and the thirty of them look different
 - A chronicle written from what actually happens on your desktop
 - **When a program on your machine crashes, it becomes a boss** named after it,
   waiting in the arena. Crashing again makes it angrier
-- An arena, expeditions that survive the machine being off, and a forge
+- An arena, expeditions that survive the machine being off, a forge, and a
+  merchant who passes through with three things a day
 - Three quests a day, a Seal, a streak that forgives two missed days
+- A walk across your screen whenever you ask for one, with a flourish at the
+  far end that looks different for every class
 - English and Brazilian Portuguese
 - Zero network, zero dependencies beyond Omarchy itself
 
@@ -182,7 +189,7 @@ Written by Luiz Felipe with coding agents and language models doing a great
 deal of the typing, over one long session. That arrangement shows up in the
 repository in ways worth knowing about if you are reading the code:
 
-- The rules are pure JavaScript with no Qt in them, and there are 103 tests
+- The rules are pure JavaScript with no Qt in them, and there are 108 tests
   over them, because an agent that cannot run what it wrote is guessing.
 - `tools/balance.js` exists because the combat numbers in the original design
   did not survive being measured — a level 1 hero won 100% of its fights, and
@@ -195,10 +202,30 @@ repository in ways worth knowing about if you are reading the code:
 - `docs/decisions.md` records every place the implementation diverges from the
   design it started with, and why, including the measurements.
 
+## Is it light?
+
+Too light to measure against the shell it runs inside, which is the honest
+answer and a better one than a decimal.
+
+Three paired four-minute windows on a two-monitor desk carrying a dozen bar
+plugins gave 8.45%, 19.45% and 5.42% of a core with Omaquest enabled, against
+9.16%, 9.93% and 10.04% with it disabled — one pair came back *lower* with it
+on. Memory: 509 MB with, 517 MB without. The shell moves more between windows
+than the plugin could add.
+
+What can be stated exactly is the work, and `tools/weight.sh` prints it from
+the source: one 60-second tick, three single-shot debounces, a sprite frame
+flip that swaps which of two pre-built layers is visible and allocates
+nothing, and one `coredumpctl` every fifteen minutes. Nothing at all runs
+before there is a hero. The same script fails the build if a new timer ever
+runs faster than that budget.
+
 ## Building on it
 
     node tests/rules.test.js      # the rules, 99 tests, no Qt involved
     node tools/balance.js         # measures the arena; --tune recalibrates it
+    ./tools/weight.sh             # what runs and how often; --memory measures RSS
+    ./tools/security-check.sh     # the release checklist, as a command
     ./tools/lint.sh               # qmllint against the installed shell
     ./tools/check-i18n.sh         # every language carries exactly en.json's keys
     ./tools/check-sprites.sh      # every grid is 16x16 and in the index
