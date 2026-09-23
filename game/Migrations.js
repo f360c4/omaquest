@@ -45,6 +45,15 @@ function pickEnum(value, allowed, fallback) {
   return allowed.indexOf(v) !== -1 ? v : fallback
 }
 
+function sanitizePotions(raw) {
+  var out = {}
+  for (var i = 0; i < Rules.POTIONS.length; i++) {
+    var key = Rules.POTIONS[i]
+    out[key] = Rules.clamp(Math.floor(Rules.num(raw ? raw[key] : 0)), 0, Rules.MAX_POTIONS)
+  }
+  return out
+}
+
 function sanitizeMaterials(raw) {
   var out = {}
   for (var i = 0; i < Rules.MATERIALS.length; i++) {
@@ -105,6 +114,7 @@ function sanitizeHero(raw, now) {
     equipment: sanitizeEquipment(raw.equipment),
     chest: sanitizeChest(raw.chest),
     materials: sanitizeMaterials(raw.materials),
+    potions: sanitizePotions(raw.potions),
     title: Rules.titleFor(level)
   }
 

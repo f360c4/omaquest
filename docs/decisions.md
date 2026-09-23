@@ -683,3 +683,53 @@ damage" is a fact you then have to do arithmetic on.
 
 Taking something off is possible, which it was not: a slot you can fill but
 not empty is a one-way door.
+
+### Closing the panel forgets which tab was open
+
+It used to come back wherever you left it, which sounds like continuity and is
+not: opening the panel three hours later and landing on the Forge because that
+is where you happened to be is the panel remembering something nobody asked it
+to. It resets to the Hero sheet, which is what somebody opening this wants to
+see. A fight in progress is the one exception, and `open` puts that back.
+
+### Attributes describe the hero; gear is what the hero is carrying
+
+The first attempt put the attributes in the Gear tab, on the theory that
+"what does this change" wants the attribute and the item on one screen. That
+was the wrong cut. The attributes describe **who the hero is** and belong on
+the sheet about the hero; the Gear tab is the **inventory** — what you own and
+what you can do with it.
+
+What made the original problem go away was not putting them together, it was
+each option showing its own delta. That stays.
+
+### "nothing, for your calling" meant nothing to anybody
+
+It was true and it was unreadable. Now the line names the class:
+
+> Wisdom 5 · no effect for a Warrior
+
+Concrete beats elegant. The same rewrite made the list of options include
+**what is already worn**, marked `(equipped)` — a list of alternatives that
+leaves out the thing you are comparing against is a list you cannot compare
+against.
+
+### Potions, because a decision mid-fight is a different decision
+
+Gear is chosen once and then carried. A potion is chosen while something is
+going wrong, which is a different kind of choice and the reason to have both.
+
+Two, and only two. A **Healing Draught** returns half your health and gets you
+off the tavern floor — what it really buys is the thirty minutes you would
+otherwise wait. A **Traveller's Flask** returns one point of energy, which is
+the thing that actually limits how much of the game a day holds, so it is
+priced to be a decision rather than a habit.
+
+Held as counts and capped at five: a stack of fifty is not a decision, it is a
+buffer. Drinking at full health keeps the potion rather than wasting it, and
+drinking mid-fight moves the health **the fight is reading** as well as the
+hero's — the arena keeps its own copy, and without telling it the next
+exchange would overwrite what was just drunk. There is a test for exactly that.
+
+The merchant always carries both, unlike the three materials that rotate:
+running out of draughts on the day you need one is not an interesting problem.

@@ -72,6 +72,8 @@ function apply(state, event, now) {
     case "equip": return equip(next, event, at)
     case "unequip": return unequip(next, event, at)
     case "buy_material": return buyMaterial(next, event, at)
+    case "buy_potion": return buyPotion(next, event, at)
+    case "drink": return drink(next, event, at)
     case "sell_item": return sellItem(next, event, at)
     case "change_class": return changeClass(next, event, at)
     case "rebirth": return rebirth(next, event, at)
@@ -955,6 +957,78 @@ function buyMaterial(state, event, at) {
   return { state: state, effects: effects }
 }
 
+function buyPotion(state, event, at) {
+  if (!state.hero) return { state: state, effects: [] }
+
+  var id = String(event.potion || "")
+  var spec = Rules.potionSpec(id)
+  if (!spec) return { state: state, effects: [] }
+  if (Rules.num(state.hero.gold) < spec.price) return { state: state, effects: [] }
+  if (Rules.num(state.hero.potions[id]) >= Rules.MAX_POTIONS) return { state: state, effects: [] }
+
+  state.hero.gold = Rules.num(state.hero.gold) - spec.price
+  state.hero.potions[id] = Rules.num(state.hero.potions[id]) + 1
+
+  return { state: state, effects: [{ type: "save" }] }
+}
+
+// Drinking works mid-fight, which is the only reason to carry one. The arena's
+// health and the hero's are the same number while a fight is on, so both move
+// together or the next round undoes it.
+function drink(state, event, at) {
+  if (!state.hero) return { state: state, effects: [] }
+
+  var id = String(event.potion || "")
+  var spec = Rules.potionSpec(id)
+  if (!spec) return { state: state, effects: [] }
+  if (Rules.num(state.hero.potions[id]) <= 0) return { state: state, effects: [] }
+
+  var hero = Rules.regen(state.hero, state.realm, at)
+  var maxHp = Rules.hpMax(hero)
+  var maxEnergy = Rules.energyMax(hero, state.realm)
+
+  var wasFainted = Rules.num(hero.faintedUntil) > at
+  var healed = 0
+  var restored = 0
+
+  if (spec.heals > 0) {
+    if (wasFainted && spec.wakes) {
+      hero.faintedUntil = 0
+      hero.hp = 0
+    } else if (Rules.num(hero.hp) >= maxHp) {
+      // Nothing to heal and nothing to wake from: keep the potion.
+      return { state: state, effects: [] }
+    }
+    var before = Rules.num(hero.hp)
+    hero.hp = Math.min(maxHp, before + Math.round(maxHp * spec.heals))
+    hero.hpUpdatedAt = at
+    healed = hero.hp - before
+  }
+
+  if (spec.energy > 0) {
+    if (Rules.num(hero.energy) >= maxEnergy) return { state: state, effects: [] }
+    hero.energy = Math.min(maxEnergy, Rules.num(hero.energy) + spec.energy)
+    hero.energyUpdatedAt = at
+    restored = spec.energy
+  }
+
+  hero.potions[id] = Rules.num(hero.potions[id]) - 1
+  state.hero = hero
+
+  // A fight in progress reads its own copy of the hero's health, so it has to
+  // be told, or the next exchange overwrites what was just drunk.
+  if (state.arena) state.arena.heroHp = Rules.num(hero.hp)
+
+  return {
+    state: state,
+    effects: [
+      effectChronicle("drank", { name: hero.name, potion: id, heal: healed, energy: restored },
+        Rules.hash("drink" + id + at)),
+      { type: "save" }
+    ]
+  }
+}
+
 // Only what is in the chest. What the hero is wearing has to be taken off
 // first, which is one click and stops a misclick selling the sword you are
 // holding.
@@ -1095,6 +1169,6 @@ if (typeof module !== "undefined" && module.exports) {
     collectExpedition: collectExpedition, craft: craft, equip: equip, unequip: unequip,
     changeClass: changeClass, rebirth: rebirth, CLASS_CHANGE_GOLD: CLASS_CHANGE_GOLD,
     canStroll: canStroll, strollPays: strollPays, strollFound: strollFound,
-    buyMaterial: buyMaterial, sellItem: sellItem
+    buyMaterial: buyMaterial, buyPotion: buyPotion, drink: drink, sellItem: sellItem
   }
 }

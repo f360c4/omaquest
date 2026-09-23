@@ -14,7 +14,18 @@ All notable changes to this project are documented here. The format follows
   what the chest is full of. Gold finally has somewhere to go.
 - `omarchy-shell f360c4.omaquest stroll`, so the walk can go on a keybind.
 
+### Added
+- **Potions.** A Healing Draught returns half your health and gets you off the
+  tavern floor; a Traveller's Flask returns a point of energy. Both are always
+  in the merchant's stock, capped at five, and both work mid-fight.
+
 ### Changed
+- Closing the panel forgets which tab was open and comes back to the Hero
+  sheet — unless a fight is in progress.
+- Gear is the inventory: the three slots, everything that fits them with
+  **(equipped)** beside what is on, and the pack. The attributes went back to
+  the Hero sheet, where they describe the hero.
+- "nothing, for your calling" now names the class: "no effect for a Warrior".
 - **Every class now attacks with its own primary attribute**, not with
   Strength. A warrior hits with Strength, a mage with Wisdom, a bard with
   Charisma. The old rule needed a paragraph to explain why a mage's attack

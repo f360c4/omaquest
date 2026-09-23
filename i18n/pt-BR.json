@@ -360,7 +360,7 @@
   "attr.effect.health": "sua vida · {value}",
   "attr.effect.evasion": "você desvia de {value}% dos golpes",
   "attr.effect.fortune": "+{value}% de ouro, e achados mais raros",
-  "attr.effect.idle": "nada, para o seu chamado",
+  "attr.effect.idle": "sem efeito para um {cls}",
   "attr.primary_note": "O atributo do seu chamado. Sobe todo nível, e é dele que seu ataque e sua habilidade são feitos.",
   "ui.derived": "No que isso dá",
   "ui.attack": "Ataque",
@@ -376,5 +376,14 @@
   "ui.gear_delta_none": "sem mudança",
   "forge.chest_moved": "O que você forja vai para o Equipamento, na aba Herói, onde dá para ver o que muda.",
   "ui.gold_short": "ouro",
-  "ui.tab_gear": "Equipamento"
+  "ui.tab_gear": "Equipamento",
+  "ui.gear_equipped": "(equipado)",
+  "ui.pack": "Na mochila",
+  "potion.drink": "Beber",
+  "potion.healing_draught.name": "Poção de Cura",
+  "potion.healing_draught.note": "Metade da vida de volta, e tira você do chão da taverna.",
+  "potion.travellers_flask.name": "Cantil do Viajante",
+  "potion.travellers_flask.note": "Um ponto de energia — mais um combate, ou mais uma estrada.",
+  "chron.drank.0": "{name} bebe {potion}.",
+  "chron.drank.1": "{potion}, e não foi cedo demais."
 }

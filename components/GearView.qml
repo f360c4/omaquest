@@ -5,13 +5,11 @@ import qs.Commons
 import qs.Ui
 import "../game/Rules.js" as Rules
 
-// Your attributes, what they add up to, and what you are wearing — in one
-// place, because they are one question.
+// What the hero is carrying: the three slots, everything that fits them, and
+// what is in the pack to drink.
 //
-// It has its own tab rather than sitting under the hero card: equipping
-// something and then hunting for the number it changed is the thing this is
-// supposed to fix. Here the attribute, the total it feeds, and the item that
-// moves it are all on the same screen.
+// The attributes live on the Hero sheet, where they describe the hero. This is
+// the inventory — what you own and what you can do with it.
 //
 // Every option shows its difference against what is worn **right now** — not
 // its own stats, the delta. "+2 attack, -1 defence" is the decision; "+4
@@ -38,13 +36,17 @@ Item {
     return root.hero && root.hero.equipment ? (root.hero.equipment[slot] || "") : ""
   }
 
-  // What the chest holds that fits this slot.
+  // Everything that fits this slot, worn or not. What is on goes first and is
+  // marked: a list of alternatives that leaves out the thing you are wearing
+  // is a list you cannot compare against.
   function optionsFor(slot) {
     if (!root.hero) return []
     var out = []
+    var worn = root.wornIn(slot)
+    if (worn) out.push(worn)
     for (var i = 0; i < root.hero.chest.length; i++) {
       var recipe = Rules.recipeById(root.hero.chest[i])
-      if (recipe && recipe.slot === slot) out.push(recipe.id)
+      if (recipe && recipe.slot === slot && out.indexOf(recipe.id) === -1) out.push(recipe.id)
     }
     return out
   }
@@ -90,173 +92,10 @@ Item {
 
   implicitHeight: column.implicitHeight
 
-  // What the arena actually reads. Defence is in here rather than among the
-  // attributes because it is not one: it comes from armour and nothing else.
-  readonly property var derived: {
-    revision
-    if (!hero) return []
-    var attrs = Rules.effectiveAttrs(hero)
-    return [
-      { label: t("ui.attack"), value: String(Rules.attackValue(hero)), note: "" },
-      { label: t("ui.defence"), value: String(Rules.defenseValue(hero)), note: t("ui.defence_note") },
-      { label: t("ui.crit"), value: Math.round(Rules.critChance(attrs) * 100) + "%", note: "" },
-      { label: t("ui.skill_power"),
-        value: "x" + (Math.round(Rules.skillPower(hero, attrs) * 100) / 100),
-        note: t("skill." + Rules.CLASSES[hero.cls].skill.id + ".name") }
-    ]
-  }
-
   Column {
     id: column
     width: parent.width
     spacing: Style.space(10)
-
-    // ---- Attributes, each saying what it is currently doing. Five numbers
-    //      with no explanation is the shape of the question "so what does
-    //      Wisdom do for a warrior?", and the honest answer — nothing — is
-    //      better written down than left to be guessed at.
-    Column {
-      width: parent.width
-      spacing: Style.space(3)
-
-      PanelSectionHeader {
-        text: root.t("ui.attributes")
-        foreground: root.foreground
-        fontFamily: root.fontFamily
-      }
-
-      Repeater {
-        model: Rules.ATTRS
-
-        Item {
-          id: attrRow
-          required property string modelData
-
-          width: column.width
-          height: attrText.implicitHeight + Style.space(2)
-
-          readonly property bool isPrimary: root.hero
-            && Rules.CLASSES[root.hero.cls]
-            && Rules.CLASSES[root.hero.cls].primary === modelData
-
-          readonly property int fromGear: root.hero ? Rules.attrFromGear(root.hero, modelData) : 0
-          readonly property var readout: root.hero ? Rules.attrReadout(root.hero, modelData) : null
-
-          Column {
-            id: attrText
-            anchors.left: parent.left
-            anchors.right: attrValue.left
-            anchors.rightMargin: Style.space(8)
-            spacing: 0
-
-            Text {
-              width: parent.width
-              textFormat: Text.PlainText
-              text: root.t("attr." + attrRow.modelData)
-              color: attrRow.isPrimary ? Color.accent : Qt.darker(root.foreground, 1.2)
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.bodySmall
-              renderType: Text.NativeRendering
-            }
-
-            Text {
-              width: parent.width
-              wrapMode: Text.WordWrap
-              textFormat: Text.PlainText
-              text: attrRow.readout
-                ? root.t("attr.effect." + attrRow.readout.key, { value: attrRow.readout.value })
-                : ""
-              color: Qt.darker(root.foreground, 1.8)
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.caption
-              renderType: Text.NativeRendering
-            }
-          }
-
-          // The base, and what gear added, kept apart — a 16 nobody can
-          // account for is worse than a 14 with a +2 beside it.
-          Text {
-            id: attrValue
-            anchors.right: parent.right
-            anchors.top: parent.top
-            textFormat: Text.PlainText
-            text: {
-              if (!root.hero || !root.hero.attrs) return "-"
-              var base = Rules.num(root.hero.attrs[attrRow.modelData])
-              return attrRow.fromGear > 0 ? base + " +" + attrRow.fromGear : String(base)
-            }
-            color: root.foreground
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
-            font.bold: attrRow.isPrimary
-            renderType: Text.NativeRendering
-          }
-        }
-      }
-
-      Text {
-        width: parent.width
-        wrapMode: Text.WordWrap
-        textFormat: Text.PlainText
-        text: root.t("attr.primary_note")
-        color: Qt.darker(root.foreground, 1.9)
-        font.family: root.fontFamily
-        font.pixelSize: Style.font.caption
-        renderType: Text.NativeRendering
-      }
-    }
-
-    PanelSeparator { width: parent.width }
-
-    // ---- The numbers the fight actually uses, including the one that is not
-    //      an attribute at all: defence comes from armour and nowhere else,
-    //      which is why it is here rather than up there.
-    Column {
-      width: parent.width
-      spacing: Style.space(2)
-
-      PanelSectionHeader {
-        text: root.t("ui.derived")
-        foreground: root.foreground
-        fontFamily: root.fontFamily
-      }
-
-      Repeater {
-        model: root.derived
-
-        Item {
-          id: derivedRow
-          required property var modelData
-
-          width: column.width
-          height: derivedLabel.implicitHeight
-
-          Text {
-            id: derivedLabel
-            anchors.left: parent.left
-            textFormat: Text.PlainText
-            text: modelData.label + (modelData.note ? "  (" + modelData.note + ")" : "")
-            color: Qt.darker(root.foreground, 1.3)
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
-            renderType: Text.NativeRendering
-          }
-
-          Text {
-            anchors.right: parent.right
-            textFormat: Text.PlainText
-            text: derivedRow.modelData.value
-            color: root.foreground
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
-            renderType: Text.NativeRendering
-          }
-        }
-      }
-    }
-
-    PanelSeparator { width: parent.width }
-
 
     PanelSectionHeader {
       text: root.t("ui.gear")
@@ -353,6 +192,8 @@ Item {
               id: option
               required property string modelData
 
+              readonly property bool worn: slotBlock.worn === modelData
+
               width: slotBlock.width
               height: Math.max(Style.space(30), optionText.implicitHeight + Style.space(6))
 
@@ -367,8 +208,11 @@ Item {
                 Text {
                   width: parent.width
                   textFormat: Text.PlainText
+                  // Said next to the item rather than only at the top of the
+                  // slot, because the list is where the comparison happens.
                   text: root.t("item." + option.modelData + ".name")
-                  color: root.foreground
+                    + (option.worn ? "  " + root.t("ui.gear_equipped") : "")
+                  color: option.worn ? Color.accent : root.foreground
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.bodySmall
                   renderType: Text.NativeRendering
@@ -390,6 +234,7 @@ Item {
                 id: wearButton
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
+                visible: !option.worn
                 text: root.t("ui.gear_wear")
                 foreground: root.foreground
                 fontFamily: root.fontFamily
@@ -412,8 +257,13 @@ Item {
               id: sellRow
               required property string modelData
 
+              // Never what is on the hero: taking it off is one click and
+              // stops a misclick selling the sword you are holding.
+              readonly property bool sellable: slotBlock.worn !== modelData
+
               width: slotBlock.width
-              height: Style.space(24)
+              height: sellable ? Style.space(24) : 0
+              visible: sellable
 
               Text {
                 anchors.left: parent.left
@@ -436,6 +286,81 @@ Item {
                 onClicked: if (root.game) root.game.dispatch({ type: "sell_item", item: sellRow.modelData })
               }
             }
+          }
+        }
+      }
+    }
+
+    PanelSeparator { width: parent.width }
+
+    // ---- What there is to drink. A potion is the decision you make in the
+    //      middle of something going wrong, which is why it is here beside
+    //      the gear rather than back in the shop.
+    Column {
+      width: parent.width
+      spacing: Style.space(3)
+
+      PanelSectionHeader {
+        text: root.t("ui.pack")
+        foreground: root.foreground
+        fontFamily: root.fontFamily
+      }
+
+      Repeater {
+        model: Rules.POTIONS
+
+        Item {
+          id: potionRow
+          required property string modelData
+
+          readonly property int held: root.hero ? Rules.num(root.hero.potions[modelData]) : 0
+
+          width: column.width
+          height: Math.max(Style.space(30), potionText.implicitHeight + Style.space(6))
+          opacity: held > 0 ? 1 : 0.5
+
+          Column {
+            id: potionText
+            anchors.left: parent.left
+            anchors.right: drinkButton.left
+            anchors.rightMargin: Style.space(8)
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(1)
+
+            Text {
+              width: parent.width
+              textFormat: Text.PlainText
+              text: root.t("potion." + potionRow.modelData + ".name") + "  " + potionRow.held
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.bodySmall
+              renderType: Text.NativeRendering
+            }
+
+            Text {
+              width: parent.width
+              wrapMode: Text.WordWrap
+              textFormat: Text.PlainText
+              text: root.t("potion." + potionRow.modelData + ".note")
+              color: Qt.darker(root.foreground, 1.6)
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              renderType: Text.NativeRendering
+            }
+          }
+
+          Button {
+            id: drinkButton
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.t("potion.drink")
+            foreground: root.foreground
+            fontFamily: root.fontFamily
+            fontSize: Style.font.bodySmall
+            bordered: true
+            enabled: potionRow.held > 0
+            opacity: enabled ? 1 : 0.45
+            onClicked: if (root.game) root.game.dispatch({ type: "drink", potion: potionRow.modelData })
           }
         }
       }

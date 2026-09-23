@@ -45,6 +45,7 @@ function expand(t, params) {
   if (out.achievement !== undefined) out.achievement = t("achievement." + out.achievement + ".name")
   if (out.item !== undefined) out.item = t("item." + out.item + ".name")
   if (out.material !== undefined) out.material = t("material." + out.material)
+  if (out.potion !== undefined) out.potion = t("potion." + out.potion + ".name")
   if (out.place !== undefined) out.place = t("dest." + out.place)
   if (out.enemy !== undefined) out.enemy = t("enemy." + out.enemy + ".name")
 

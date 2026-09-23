@@ -1363,6 +1363,94 @@ test("selling something back is worth less than buying its materials again", () 
   }
 })
 
+// ------------------------------------------------------------------ potions
+
+test("a draught buys time: it heals, and it gets you off the tavern floor", () => {
+  let state = freshState("human", "warrior")
+  state.hero.potions.healing_draught = 1
+  state.hero.hp = 0
+  state.hero.hpUpdatedAt = T0
+  state.hero.faintedUntil = T0 + Rules.TAVERN_SECONDS
+
+  const result = World.apply(state, { type: "drink", potion: "healing_draught" }, T0)
+  assertEqual(result.state.hero.faintedUntil, 0, "on your feet")
+  assert(result.state.hero.hp > 0, "and healed")
+  assertEqual(result.state.hero.potions.healing_draught, 0, "and it is gone")
+})
+
+test("a flask returns a point of energy and never more than the maximum", () => {
+  let state = freshState()
+  state.hero.potions.travellers_flask = 2
+  state.hero.energy = 1
+  state.hero.energyUpdatedAt = T0
+
+  state = World.apply(state, { type: "drink", potion: "travellers_flask" }, T0).state
+  assertEqual(state.hero.energy, 2, "one point")
+
+  state.hero.energy = state.hero.energyMax
+  const full = World.apply(state, { type: "drink", potion: "travellers_flask" }, T0)
+  assertEqual(full.state.hero.potions.travellers_flask, state.hero.potions.travellers_flask,
+    "a full hero keeps the flask rather than wasting it")
+})
+
+test("drinking at full health wastes nothing", () => {
+  let state = freshState()
+  state.hero.potions.healing_draught = 1
+  state.hero.hp = state.hero.hpMax
+  state.hero.hpUpdatedAt = T0
+
+  const result = World.apply(state, { type: "drink", potion: "healing_draught" }, T0)
+  assertEqual(result.state.hero.potions.healing_draught, 1, "kept")
+  assertEqual(result.effects.length, 0, "and nothing happened")
+})
+
+test("drinking mid-fight moves the health the fight is reading", () => {
+  let state = freshState("human", "warrior")
+  const wanderer = Rules.wanderers(state.day.date, state.hero.level)[0]
+  state = World.apply(state, { type: "start_fight", kind: "wanderer", id: wanderer.id }, T0).state
+
+  state.arena.heroHp = 5
+  state.hero.hp = 5
+  state.hero.hpUpdatedAt = T0
+  state.hero.potions.healing_draught = 1
+
+  const result = World.apply(state, { type: "drink", potion: "healing_draught" }, T0)
+  assert(result.state.arena.heroHp > 5, "the fight sees it")
+  assertEqual(result.state.arena.heroHp, result.state.hero.hp, "and agrees with the hero")
+})
+
+test("drinking what you do not have does nothing", () => {
+  const state = freshState()
+  const before = JSON.stringify(state)
+  assertEqual(JSON.stringify(World.apply(state, { type: "drink", potion: "healing_draught" }, T0).state),
+    before, "untouched")
+})
+
+test("potions cost gold and stack no higher than they should", () => {
+  let state = freshState()
+  state.hero.gold = 10000
+
+  for (let i = 0; i < Rules.MAX_POTIONS + 3; i++)
+    state = World.apply(state, { type: "buy_potion", potion: "healing_draught" }, T0).state
+
+  assertEqual(state.hero.potions.healing_draught, Rules.MAX_POTIONS, "capped")
+  assertEqual(state.hero.gold, 10000 - Rules.MAX_POTIONS * Rules.POTION_SPEC.healing_draught.price,
+    "and paid for exactly what was delivered")
+})
+
+test("a potion survives a load", () => {
+  let state = freshState()
+  state.hero.potions.travellers_flask = 3
+  const loaded = Migrations.run(JSON.parse(JSON.stringify(state)))
+  assertEqual(loaded.hero.potions.travellers_flask, 3, "kept")
+
+  const silly = freshState()
+  silly.hero.potions = { travellers_flask: 999, unobtainium: 4 }
+  const clean = Migrations.run(JSON.parse(JSON.stringify(silly)))
+  assertEqual(clean.hero.potions.travellers_flask, Rules.MAX_POTIONS, "clamped")
+  assertEqual(clean.hero.potions.unobtainium, undefined, "and nothing invented")
+})
+
 // ------------------------------------------------------ changing and starting over
 
 test("changing class costs gold, keeps the level, and re-derives the attributes", () => {

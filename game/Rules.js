@@ -296,6 +296,30 @@ function merchantStock(dateString) {
   return out
 }
 
+// ---- Things you drink.
+//
+// Gear is a decision you make once; a potion is one you make in the middle of
+// something going wrong. The flask matters more than it looks: energy is what
+// limits how much of the game you can play in a day, so it is priced to be a
+// choice rather than a habit.
+//
+// Held as counts, like materials, and capped — a stack of fifty draughts is
+// not a decision, it is a buffer.
+var POTIONS = ["healing_draught", "travellers_flask"]
+
+var POTION_SPEC = {
+  // Half your health, and it gets you off the tavern floor: the thirty
+  // minutes there is time, and time is the one thing a potion should buy.
+  healing_draught: { price: 45, heals: 0.5, wakes: true, energy: 0 },
+  travellers_flask: { price: 70, heals: 0, wakes: false, energy: 1 }
+}
+
+var MAX_POTIONS = 5
+
+function potionSpec(id) {
+  return POTION_SPEC[String(id)] || null
+}
+
 var ACHIEVEMENTS = [
   "first_blood", "survivor", "guardian_slayer", "marathon", "explorer", "melomaniac",
   "chameleon", "smith", "collector", "constant", "traveller", "myth"
@@ -551,6 +575,8 @@ function cloneHero(hero) {
   for (var attr in (hero && hero.attrs ? hero.attrs : {})) out.attrs[attr] = hero.attrs[attr]
   out.materials = {}
   for (var material in (hero && hero.materials ? hero.materials : {})) out.materials[material] = hero.materials[material]
+  out.potions = {}
+  for (var potion in (hero && hero.potions ? hero.potions : {})) out.potions[potion] = hero.potions[potion]
   out.equipment = {}
   for (var slot in (hero && hero.equipment ? hero.equipment : {})) out.equipment[slot] = hero.equipment[slot]
   out.chest = (hero && hero.chest ? hero.chest : []).slice()
@@ -1073,6 +1099,7 @@ function newHero(name, race, cls, now) {
     equipment: { weapon: null, armor: null, amulet: null },
     chest: [],
     materials: { iron: 0, wood: 0, feather: 0, crystal: 0, oil: 0, core: 0 },
+    potions: { healing_draught: 0, travellers_flask: 0 },
     title: "novice"
   }
   hero.hpMax = hpMax(hero)
@@ -1107,6 +1134,7 @@ if (typeof module !== "undefined" && module.exports) {
     EXPEDITIONS: EXPEDITIONS, DESTINATIONS: DESTINATIONS, ENCOUNTER_CHANCE: ENCOUNTER_CHANCE,
     RECIPES: RECIPES, ACHIEVEMENTS: ACHIEVEMENTS,
     MATERIAL_PRICE: MATERIAL_PRICE, MERCHANT_OFFERS: MERCHANT_OFFERS,
+    POTIONS: POTIONS, POTION_SPEC: POTION_SPEC, MAX_POTIONS: MAX_POTIONS, potionSpec: potionSpec,
     SELL_PER_TIER: SELL_PER_TIER, itemValue: itemValue, merchantStock: merchantStock,
     num: num, clamp: clamp, nowSec: nowSec, localDate: localDate, isWeekend: isWeekend,
     isoWeekKey: isoWeekKey, rng: rng, hash: hash, seedFromDate: seedFromDate,

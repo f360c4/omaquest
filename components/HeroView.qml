@@ -25,6 +25,22 @@ Item {
   readonly property var world: { revision; return game ? game.world : null }
   readonly property var xp: { revision; return game ? game.xpProgress() : null }
 
+  // What the arena actually reads. Defence is in here rather than among the
+  // attributes because it is not one: it comes from armour and nothing else.
+  readonly property var derived: {
+    revision
+    if (!hero) return []
+    var attrs = Rules.effectiveAttrs(hero)
+    return [
+      { label: t("ui.attack"), value: String(Rules.attackValue(hero)), note: "" },
+      { label: t("ui.defence"), value: String(Rules.defenseValue(hero)), note: t("ui.defence_note") },
+      { label: t("ui.crit"), value: Math.round(Rules.critChance(attrs) * 100) + "%", note: "" },
+      { label: t("ui.skill_power"),
+        value: "x" + (Math.round(Rules.skillPower(hero, attrs) * 100) / 100),
+        note: t("skill." + Rules.CLASSES[hero.cls].skill.id + ".name") }
+    ]
+  }
+
   // Something rose and has not been looked at. A line, not a nag — the arena
   // is a plus, and the one thing worse than forgetting it is being reminded
   // of it twice.
@@ -211,6 +227,160 @@ Item {
     }
 
     PanelSeparator { width: parent.width }
+
+    PanelSeparator { width: parent.width }
+
+    // ---- Attributes, each saying what it is currently doing. Five numbers
+    //      with no explanation is the shape of the question "so what does
+    //      Wisdom do for a warrior?", and the honest answer — nothing — is
+    //      better written down than left to be guessed at.
+    Column {
+      width: parent.width
+      spacing: Style.space(3)
+
+      PanelSectionHeader {
+        text: root.t("ui.attributes")
+        foreground: root.foreground
+        fontFamily: root.fontFamily
+      }
+
+      Repeater {
+        model: Rules.ATTRS
+
+        Item {
+          id: attrRow
+          required property string modelData
+
+          width: column.width
+          height: attrText.implicitHeight + Style.space(2)
+
+          readonly property bool isPrimary: root.hero
+            && Rules.CLASSES[root.hero.cls]
+            && Rules.CLASSES[root.hero.cls].primary === modelData
+
+          readonly property int fromGear: root.hero ? Rules.attrFromGear(root.hero, modelData) : 0
+          readonly property var readout: root.hero ? Rules.attrReadout(root.hero, modelData) : null
+
+          Column {
+            id: attrText
+            anchors.left: parent.left
+            anchors.right: attrValue.left
+            anchors.rightMargin: Style.space(8)
+            spacing: 0
+
+            Text {
+              width: parent.width
+              textFormat: Text.PlainText
+              text: root.t("attr." + attrRow.modelData)
+              color: attrRow.isPrimary ? Color.accent : Qt.darker(root.foreground, 1.2)
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.bodySmall
+              renderType: Text.NativeRendering
+            }
+
+            Text {
+              width: parent.width
+              wrapMode: Text.WordWrap
+              textFormat: Text.PlainText
+              // "no effect for a Warrior" names the class, because "nothing,
+              // for your calling" was true and unreadable.
+              text: attrRow.readout
+                ? root.t("attr.effect." + attrRow.readout.key, {
+                    value: attrRow.readout.value,
+                    cls: root.hero ? root.t("class." + root.hero.cls + ".name") : ""
+                  })
+                : ""
+              color: Qt.darker(root.foreground, 1.8)
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              renderType: Text.NativeRendering
+            }
+          }
+
+          // The base, and what gear added, kept apart — a 16 nobody can
+          // account for is worse than a 14 with a +2 beside it.
+          Text {
+            id: attrValue
+            anchors.right: parent.right
+            anchors.top: parent.top
+            textFormat: Text.PlainText
+            text: {
+              if (!root.hero || !root.hero.attrs) return "-"
+              var base = Rules.num(root.hero.attrs[attrRow.modelData])
+              return attrRow.fromGear > 0 ? base + " +" + attrRow.fromGear : String(base)
+            }
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.bodySmall
+            font.bold: attrRow.isPrimary
+            renderType: Text.NativeRendering
+          }
+        }
+      }
+
+      Text {
+        width: parent.width
+        wrapMode: Text.WordWrap
+        textFormat: Text.PlainText
+        text: root.t("attr.primary_note")
+        color: Qt.darker(root.foreground, 1.9)
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        renderType: Text.NativeRendering
+      }
+    }
+
+    PanelSeparator { width: parent.width }
+
+    // ---- The numbers the fight actually uses, including the one that is not
+    //      an attribute at all: defence comes from armour and nowhere else,
+    //      which is why it is here rather than up there.
+    Column {
+      width: parent.width
+      spacing: Style.space(2)
+
+      PanelSectionHeader {
+        text: root.t("ui.derived")
+        foreground: root.foreground
+        fontFamily: root.fontFamily
+      }
+
+      Repeater {
+        model: root.derived
+
+        Item {
+          id: derivedRow
+          required property var modelData
+
+          width: column.width
+          height: derivedLabel.implicitHeight
+
+          Text {
+            id: derivedLabel
+            anchors.left: parent.left
+            textFormat: Text.PlainText
+            text: modelData.label + (modelData.note ? "  (" + modelData.note + ")" : "")
+            color: Qt.darker(root.foreground, 1.3)
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.bodySmall
+            renderType: Text.NativeRendering
+          }
+
+          Text {
+            anchors.right: parent.right
+            textFormat: Text.PlainText
+            text: derivedRow.modelData.value
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.bodySmall
+            renderType: Text.NativeRendering
+          }
+        }
+      }
+    }
+
+    PanelSeparator { width: parent.width }
+
 
     PanelSeparator { width: parent.width }
 

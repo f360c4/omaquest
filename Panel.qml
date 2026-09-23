@@ -113,6 +113,17 @@ Panel {
       root.bar.shell.updateEntryInline(root.moduleName, entry)
   }
 
+  // Closing forgets where you were. Coming back to the Forge because that is
+  // where you happened to be three hours ago is not continuity, it is the
+  // panel remembering something nobody asked it to — and the Hero sheet is
+  // what somebody opening this wants to see.
+  //
+  // A fight in progress is the exception, and `open` puts that back.
+  function close() {
+    root.tab = "hero"
+    root.controller.hide()
+  }
+
   function switchPanel(direction) {
     if (root.bar && typeof root.bar.switchPanelFrom === "function")
       return root.bar.switchPanelFrom(root.barIdentity, direction)

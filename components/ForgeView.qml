@@ -129,6 +129,53 @@ Item {
         fontFamily: root.fontFamily
       }
 
+      // Always in stock, unlike the three that rotate: running out of
+      // draughts on the day you need one is not an interesting problem.
+      Repeater {
+        model: Rules.POTIONS
+
+        Item {
+          id: potionOffer
+          required property string modelData
+
+          readonly property var spec: Rules.potionSpec(modelData)
+          readonly property bool affordable: !!root.hero
+            && Rules.num(root.hero.gold) >= spec.price
+            && Rules.num(root.hero.potions[modelData]) < Rules.MAX_POTIONS
+
+          width: column.width
+          height: Style.space(28)
+          opacity: affordable ? 1 : 0.5
+
+          Text {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.PlainText
+            text: root.t("potion." + potionOffer.modelData + ".name")
+              + (root.hero ? "  " + Rules.num(root.hero.potions[potionOffer.modelData])
+                  + "/" + Rules.MAX_POTIONS : "")
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.bodySmall
+            renderType: Text.NativeRendering
+          }
+
+          Button {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.t("forge.buy", { gold: potionOffer.spec.price })
+            foreground: root.foreground
+            fontFamily: root.fontFamily
+            fontSize: Style.font.bodySmall
+            bordered: true
+            enabled: potionOffer.affordable
+            opacity: enabled ? 1 : 0.45
+            onClicked: if (root.game)
+              root.game.dispatch({ type: "buy_potion", potion: potionOffer.modelData })
+          }
+        }
+      }
+
       Repeater {
         model: root.stock
 
