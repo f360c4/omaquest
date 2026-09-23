@@ -30,7 +30,8 @@
       "notifyQuests": false,
       "sensorAgents": false,
       "sensorGit": false,
-      "bardEnabled": false
+      "bardEnabled": false,
+      "sound": "off"
     },
     "schema": [
       {
@@ -51,6 +52,18 @@
         "label": "Show the hero's level in the bar",
         "defaultValue": false,
         "description": "Adds 'Lv N' beside the sprite on horizontal bars. Vertical bars always show the sprite alone."
+      },
+      {
+        "key": "sound",
+        "type": "enum",
+        "label": "Sound",
+        "options": [
+          "off",
+          "quiet",
+          "full"
+        ],
+        "defaultValue": "off",
+        "description": "A plucked theme while a fight is on, and a note for a level or a find. Nothing ever plays outside those. Off by default."
       },
       {
         "key": "notifyLevelUp",

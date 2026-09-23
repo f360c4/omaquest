@@ -295,6 +295,7 @@ function grantXp(state, amount, at) {
     }, Rules.hash(hero.name + hero.level)))
     effects.push(effectNotify("level_up", { name: hero.name, level: hero.level, title: hero.title }))
     effects.push(effectAnim("cheer", 10000))
+    effects.push({ type: "sound", name: "level_up.wav" })
 
     if (hero.level >= Rules.MAX_LEVEL) effects = effects.concat(grantAchievement(state, "myth"))
   }
@@ -617,6 +618,12 @@ function fightAction(state, event, at) {
     // A flinch, on the blow that landed — not a state that lasts as long as
     // the health bar is low. Half a second and done.
     effects.push({ type: "anim", name: "hurt", ms: 500 })
+    effects.push({ type: "sound", name: "hurt.wav" })
+  }
+
+  for (var l = 0; l < step.log.length; l++) {
+    if (step.log[l].key === "hit_crit") effects.push({ type: "sound", name: "crit.wav" })
+    else if (step.log[l].key === "hit") effects.push({ type: "sound", name: "hit.wav" })
   }
 
   return { state: state, effects: effects }
@@ -659,20 +666,32 @@ function winFight(state, at, random) {
   if (collected >= Rules.MATERIALS.length) effects = effects.concat(grantAchievement(state, "collector"))
 
   effects.push({ type: "anim", name: "cheer", ms: 4000 })
+  effects.push({ type: "sound", name: "victory.wav" })
   effects.push({ type: "save" })
   return effects
 }
 
+// Losing costs progress, never achievement.
+//
+// A quarter of the experience you had built toward the level you are on, and
+// nothing else: no gold, no material, no item, and never a level. You cannot
+// be knocked back to a title you already earned, and `stats.totalXp` — which
+// the feats read — does not move. What you lose is an afternoon, which is
+// enough for the arena to mean something and little enough that nobody stops
+// opening it.
+var DEFEAT_XP_LOSS = 0.25
+
 function loseFight(state, at) {
-  // Nothing is taken. The hero wakes in the tavern at half health half an hour
-  // later, and that is the whole penalty — no experience lost, no gold, no
-  // item, because a game that punishes you for playing it is not this one.
   state.hero.hp = 0
   state.hero.hpUpdatedAt = at
   state.hero.faintedUntil = at + Rules.TAVERN_SECONDS
 
-  var effects = [effectChronicle("arena_lost", {}, Rules.hash("lost" + at))]
-  effects = effects.concat(grantXp(state, 3, at))
+  var lost = Math.floor(Rules.num(state.hero.xp) * DEFEAT_XP_LOSS)
+  state.hero.xp = Math.max(0, Rules.num(state.hero.xp) - lost)
+
+  var effects = [effectChronicle(lost > 0 ? "arena_lost_xp" : "arena_lost",
+    { xp: lost }, Rules.hash("lost" + at))]
+  effects.push({ type: "sound", name: "defeat.wav" })
   effects.push({ type: "save" })
   return effects
 }
@@ -908,6 +927,7 @@ function strollFound(state, event, at) {
   // different dictionary namespaces, and iron is not a recipe.
   var effects = [effectChronicle("strolled",
     { name: state.hero.name, material: material, gold: gold }, Rules.hash("stroll" + at))]
+  effects.push({ type: "sound", name: "found.wav" })
   effects = effects.concat(advanceQuests(state, at))
   effects.push({ type: "save" })
   return { state: state, effects: effects, found: { material: material, gold: gold } }
@@ -1161,6 +1181,7 @@ if (typeof module !== "undefined" && module.exports) {
     apply: apply, clone: clone, grantXp: grantXp, advanceQuests: advanceQuests,
     grantAchievement: grantAchievement, dailyAchievements: dailyAchievements,
     rollOverDay: rollOverDay, allQuestsDone: allQuestsDone,
+    DEFEAT_XP_LOSS: DEFEAT_XP_LOSS,
     sessionTick: sessionTick, passiveExtras: passiveExtras,
     coredumps: coredumps, checkThreats: checkThreats, startFight: startFight,
     fightAction: fightAction, flee: flee, cancelFight: cancelFight,

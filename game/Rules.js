@@ -310,8 +310,12 @@ var POTIONS = ["healing_draught", "travellers_flask"]
 var POTION_SPEC = {
   // Half your health, and it gets you off the tavern floor: the thirty
   // minutes there is time, and time is the one thing a potion should buy.
-  healing_draught: { price: 45, heals: 0.5, wakes: true, energy: 0 },
-  travellers_flask: { price: 70, heals: 0, wakes: false, energy: 1 }
+  // Priced against a day's takings, not against a fight's. A good day is
+  // roughly 150 gold, so a draught is most of an afternoon and a flask is a
+  // day — which is what makes carrying one a decision rather than a habit,
+  // and what makes selling the sword you replaced worth doing.
+  healing_draught: { price: 110, heals: 0.5, wakes: true, energy: 0 },
+  travellers_flask: { price: 170, heals: 0, wakes: false, energy: 1 }
 }
 
 var MAX_POTIONS = 5

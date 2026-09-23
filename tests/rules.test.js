@@ -568,24 +568,61 @@ test("winning pays experience, gold and loot, and takes nothing back", () => {
   assert(result.state.achievements.indexOf("first_blood") !== -1, "first blood")
 })
 
-test("losing costs nothing but time", () => {
-  let state = freshState("human", "bard")
+test("losing costs progress, never achievement", () => {
+  let state = freshState("human", "warrior")
+  state.hero.level = 9
+  state.hero.attrs = Rules.attrsFor("human", "warrior", 9)
+  state.hero.xp = 400
+  state.stats.totalXp = 9000
+  state.hero.gold = 250
+  state.hero.materials.core = 3
+  state.hero.chest = ["iron_sword"]
+  state.hero.equipment.weapon = "rune_blade"
+  state.achievements = ["first_blood", "survivor"]
+
   const wanderer = Rules.wanderers(state.day.date, state.hero.level)[0]
   state = World.apply(state, { type: "start_fight", kind: "wanderer", id: wanderer.id }, T0).state
-
-  const before = {
-    gold: state.hero.gold, level: state.hero.level,
-    chest: state.hero.chest.length, materials: JSON.stringify(state.hero.materials)
-  }
   state.arena.heroHp = 1
   state.arena.enemy.atk = 9999
 
   const result = World.apply(state, { type: "fight_action", action: "attack", random: fixedRandom([0.99, 0.99]) }, T0)
   assertEqual(result.state.arena.outcome, "lost", "lost")
-  assertEqual(result.state.hero.gold, before.gold, "no gold taken")
-  assertEqual(result.state.hero.level, before.level, "no level taken")
-  assertEqual(result.state.hero.chest.length, before.chest, "no item taken")
-  assertEqual(JSON.stringify(result.state.hero.materials), before.materials, "no material taken")
+
+  // What it costs.
+  assertEqual(result.state.hero.xp, 400 - Math.floor(400 * World.DEFEAT_XP_LOSS), "a quarter of the progress")
+
+  // What it never costs.
+  assertEqual(result.state.hero.level, 9, "never a level")
+  assertEqual(result.state.hero.title, state.hero.title, "never a title")
+  assertEqual(result.state.hero.gold, 250, "never gold")
+  assertEqual(result.state.hero.materials.core, 3, "never materials")
+  assertEqual(result.state.hero.chest.length, 1, "never an item")
+  assertEqual(result.state.hero.equipment.weapon, "rune_blade", "never what is worn")
+  assertEqual(JSON.stringify(result.state.achievements), JSON.stringify(["first_blood", "survivor"]), "never a feat")
+  assertEqual(result.state.stats.totalXp, 9000, "and never the lifetime record the feats read")
+})
+
+test("losing at the very start of a level cannot go below zero", () => {
+  let state = freshState()
+  state.hero.xp = 0
+  const wanderer = Rules.wanderers(state.day.date, state.hero.level)[0]
+  state = World.apply(state, { type: "start_fight", kind: "wanderer", id: wanderer.id }, T0).state
+  state.arena.heroHp = 1
+  state.arena.enemy.atk = 9999
+
+  const result = World.apply(state, { type: "fight_action", action: "attack", random: fixedRandom([0.99, 0.99]) }, T0)
+  assertEqual(result.state.hero.xp, 0, "zero, not negative")
+  assertEqual(result.state.hero.level, state.hero.level, "and still the same level")
+})
+
+test("the tavern is still the only other cost", () => {
+  let state = freshState("human", "bard")
+  const wanderer = Rules.wanderers(state.day.date, state.hero.level)[0]
+  state = World.apply(state, { type: "start_fight", kind: "wanderer", id: wanderer.id }, T0).state
+  state.arena.heroHp = 1
+  state.arena.enemy.atk = 9999
+
+  const result = World.apply(state, { type: "fight_action", action: "attack", random: fixedRandom([0.99, 0.99]) }, T0)
   assertEqual(result.state.hero.faintedUntil, T0 + Rules.TAVERN_SECONDS, "half an hour in the tavern")
 })
 

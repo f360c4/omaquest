@@ -733,3 +733,51 @@ exchange would overwrite what was just drunk. There is a test for exactly that.
 
 The merchant always carries both, unlike the three materials that rotate:
 running out of draughts on the day you need one is not an interesting problem.
+
+## Two rules from the specification, changed on purpose
+
+Both of these were pillars in `02-game-design.md`, and both were overruled by
+the author with a reason. Written down here because a reviewer reading the
+original design and then the code deserves to find the argument rather than an
+inconsistency.
+
+### "It never plays a sound" → it plays one if you ask it to
+
+The original rule was absolute. The argument against it: a fight you chose to
+enter is not an interruption, and a game about a bard and a chronicle that
+makes no sound at all is leaving something on the table.
+
+The shape that keeps the spirit: **off by default**, three settings
+(`off`/`quiet`/`full`), and when on it plays in exactly three places — under a
+fight, on a level, and when the hero comes home from a walk with something.
+Never ambient, never on a timer, never while the panel is shut.
+
+The first attempt was square waves and noise percussion and sounded like an
+arcade cabinet, which is the wrong instrument for this. It is now a plucked
+string — Karplus-Strong, a burst of noise through a short delay line — playing
+something slow and modal in D minor with a drone under it. Roughly a lute.
+
+And it is **generated, not recorded**: `tools/make-sounds.py` is the source,
+the way the grids are the source of the sprites. `tools/security-check.sh` runs
+the generator and fails if what is in the tree is not byte-identical to what it
+produces, so "generated from code" stays a fact rather than a claim.
+
+### "Losing never takes anything back" → it costs a quarter of your progress
+
+The original rule: no experience, no gold, no item, ever. The argument against
+it, in the author's words: *"é um RPG — não adianta ser fácil e enjoativo."* An
+arena that is free to lose is an arena with no reason to be careful in.
+
+The shape that keeps the spirit: **progress, never achievement.** A defeat
+costs a quarter of the experience built toward the level you are on. It can
+never cost a level, a title, gold, a material, an item, a feat, or the lifetime
+experience total the achievements read. Nothing earned can be taken away; what
+you can lose is an afternoon.
+
+There is a test asserting each of those individually, so a later balance pass
+cannot quietly widen it.
+
+Potions were repriced in the same breath — 110 and 170 gold against a good
+day's takings of about 150 — because a draught that costs an afternoon is a
+decision and one that costs two fights is a habit. A Healing Draught can be
+drunk inside a fight, which is the only reason to carry one.

@@ -24,6 +24,8 @@ Item {
   readonly property bool away: !!world && !!world.expedition && world.expedition.resolved !== true
   readonly property bool fainted: !!hero && Rules.num(hero.faintedUntil) > Math.floor(Date.now() / 1000)
   readonly property bool hasEnergy: !!hero && Rules.num(hero.energy) >= 1
+  readonly property int draughts: hero && hero.potions
+    ? Rules.num(hero.potions.healing_draught) : 0
 
   function t(key, vars) {
     return game ? game.t(key, vars) : key
@@ -362,6 +364,19 @@ Item {
         fontSize: Style.font.bodySmall
         bordered: true
         onClicked: if (root.game) root.game.dispatch({ type: "fight_action", action: "defend" })
+      }
+
+      // Drinking mid-fight is the whole reason to carry one, and hunting for
+      // it in another tab while something is killing you is not a decision,
+      // it is a chore.
+      Button {
+        visible: root.draughts > 0
+        text: root.t("potion.drink") + " (" + root.draughts + ")"
+        foreground: root.foreground
+        fontFamily: root.fontFamily
+        fontSize: Style.font.bodySmall
+        bordered: true
+        onClicked: if (root.game) root.game.dispatch({ type: "drink", potion: "healing_draught" })
       }
 
       Button {

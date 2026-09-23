@@ -30,19 +30,26 @@ plugin grew the boss each time.
 - Three quests a day, a Seal, a streak that forgives two missed days
 - A walk across your screen whenever you ask for one, with a flourish at the
   far end that looks different for every class
+- Potions worth deciding about, and a plucked theme while you fight — if you
+  switch sound on, which is off by default
 - English and Brazilian Portuguese
 - Zero network, zero dependencies beyond Omarchy itself
 
 ## What it never does
 
-It does not decay, nag, or take anything back. Losing a fight costs the energy
-you already spent and half an hour in a tavern — no experience, no gold, no
-item, ever. It does not open its own panel, make a sound, or need a keyboard.
+It does not decay or nag. It does not open its own panel or need a keyboard.
 It sends at most **two notifications a day** in total, and every category can
-be switched off.
+be switched off. It is silent unless you switch sound on, and then only during
+a fight and for a level or a find.
 
 Leave for a month and your hero is exactly where you left them, with full
 energy.
+
+**Losing a fight costs progress, never achievement.** You drop a quarter of the
+experience you had built toward the level you are on — enough for the arena to
+matter — and nothing else: never a level, a title, gold, a material, an item,
+or a feat. Nothing you have earned can be taken away; what you can lose is an
+afternoon.
 
 ## Requirements
 
@@ -103,6 +110,7 @@ shell, never a string concatenated from anything.**
 | `ls -1 <agents/usage>`, then `head -c 65536 <file>` | Every 15 minutes, **only if you switch the agent sensor on** |
 | `find ~/Work …`, then `git -C <repo> rev-list --count …` | Every 30 minutes, **only if you switch the commit sensor on** |
 | `mkdir -p <state>/bard` and `omarchy agent prompt "<fixed text>"` | **Only when you click "Ask the Bard"**, at most once a day, and only if you switched the Bard on |
+| `pw-play --volume <v> assets/sounds/<file>.wav` | **Only if you switch sound on**, and then only during a fight or for a level or a find |
 
 Never `notify-send` (the Omarchy notification server drops it), never `curl`,
 `wget` or any network tool, never `sudo` or `pkexec`, never `bash -c`.
@@ -142,6 +150,7 @@ rather ask your agent directly.
 |---|---|---|
 | `language` | `auto` | Panel language. Auto follows `$LANG` and falls back to English. |
 | `showLevel` | off | Adds `Lv N` beside the sprite on horizontal bars. |
+| `sound` | **off** | `off`, `quiet` or `full`. A plucked theme during a fight, one note for a level or a find, and nothing else, ever. |
 | `notifyLevelUp` | **on** | One notification when the hero reaches a new level. |
 | `notifyBoss` | **on** | One notification when something rises in the arena. |
 | `notifyExpedition` | off | When an expedition is home. |
@@ -172,9 +181,11 @@ basename. It is truncated to 32 characters where it enters and again where it
 is loaded, and it is rendered as plain text — the panel uses `Text.PlainText`
 everywhere, so no name from this machine can become markup.
 
-**Sprites are plain-text grids** under `assets/sprites/`, so the whole
-repository is reviewable as text. There is no binary in it except the preview
-images.
+**Sprites are plain-text grids** under `assets/sprites/`, and **the audio is
+generated from code** by `tools/make-sounds.py` — a plucked string built out of
+about fifteen lines of arithmetic. Nothing was recorded or downloaded, and
+there is no sample whose origin anybody has to take on trust. The only binaries
+in the repository are the preview images and those generated `.wav` files.
 
 To see what the plugin currently knows:
 

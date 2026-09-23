@@ -385,5 +385,12 @@
   "potion.travellers_flask.name": "Cantil do Viajante",
   "potion.travellers_flask.note": "Um ponto de energia — mais um combate, ou mais uma estrada.",
   "chron.drank.0": "{name} bebe {potion}.",
-  "chron.drank.1": "{potion}, e não foi cedo demais."
+  "chron.drank.1": "{potion}, e não foi cedo demais.",
+  "settings.sound": "Som",
+  "settings.sound_note": "Um tema de alaúde enquanto a luta acontece, e uma nota para um nível ou um achado. Nada toca fora disso, e nada toca sem você ligar aqui.",
+  "settings.sound_off": "Desligado",
+  "settings.sound_quiet": "Baixo",
+  "settings.sound_full": "Alto",
+  "chron.arena_lost_xp.0": "{name} cai, e acorda na taverna {xp} de experiência mais pobre.",
+  "chron.arena_lost_xp.1": "Hoje não. {xp} de experiência ficaram na areia."
 }

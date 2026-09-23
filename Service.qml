@@ -118,6 +118,7 @@ Item {
       else if (effect.type === "chronicle") appendChronicle(effect.entry)
       else if (effect.type === "notify") notify(effect.key, effect.params)
       else if (effect.type === "anim") playAnimation(effect.name, effect.ms)
+      else if (effect.type === "sound") playSound(effect.name)
     }
   }
 
@@ -150,6 +151,63 @@ Item {
     id: animTimer
     repeat: false
     onTriggered: root.transientAnim = ""
+  }
+
+  // ------------------------------------------------------------------ sound
+  //
+  // Off by default. A bar widget that makes a noise nobody asked for is a bar
+  // widget people uninstall, and the marketplace reviewer opening this for the
+  // first time should not be startled by it. Switched on, nothing plays
+  // outside the arena and the two moments worth marking — the hero reaching a
+  // level, and coming home from a walk with something.
+  //
+  // `pw-play` by argument vector, the same way Omagotchi does it, so there is
+  // no new dependency and nothing to link against.
+
+  readonly property string soundSetting: String(setting("sound", "off"))
+  readonly property real soundVolume: {
+    if (soundSetting === "quiet") return 0.20
+    if (soundSetting === "full") return 0.45
+    return 0
+  }
+  readonly property bool soundOn: soundVolume > 0 && !root.audioBroken
+
+  // If `pw-play` is not there, or there is no sink, the looping theme would
+  // otherwise respawn a process forever. Three instant failures and sound
+  // retires for the session.
+  property int audioFailures: 0
+  readonly property bool audioBroken: audioFailures >= 3
+
+  function soundPath(name) {
+    return Qt.resolvedUrl("assets/sounds/" + name).toString().replace(/^file:\/\//, "")
+  }
+
+  function playSound(name) {
+    if (!soundOn) return
+    Quickshell.execDetached(["pw-play", "--volume", root.soundVolume.toFixed(2), soundPath(name)])
+  }
+
+  // The theme runs for as long as a fight does. `pw-play` plays once and
+  // exits, so looping is restarting it — guarded, because a player that fails
+  // immediately must not be restarted immediately for ever.
+  readonly property bool battleMusic: soundOn && !!world && !!world.arena
+    && world.arena.outcome === "ongoing"
+
+  property double themeStartedAt: 0
+
+  Process {
+    id: theme
+    running: root.battleMusic
+    command: ["pw-play", "--volume", root.soundVolume.toFixed(2), root.soundPath("battle_theme.wav")]
+    onRunningChanged: if (running) root.themeStartedAt = Date.now()
+    onExited: {
+      if (Date.now() - root.themeStartedAt < 1000) {
+        root.audioFailures += 1
+        return
+      }
+      root.audioFailures = 0
+      if (root.battleMusic) theme.running = true
+    }
   }
 
   // --------------------------------------------------------- notifications

@@ -89,6 +89,49 @@ Item {
       }
     }
 
+    // ---- Sound. Off by default, because a bar widget that makes a noise
+    //      nobody asked for is a bar widget people uninstall.
+    Column {
+      width: parent.width
+      spacing: Style.space(4)
+
+      PanelSectionHeader {
+        text: root.t("settings.sound")
+        foreground: root.foreground
+        fontFamily: root.fontFamily
+      }
+
+      Text {
+        width: parent.width
+        wrapMode: Text.WordWrap
+        textFormat: Text.PlainText
+        text: root.t("settings.sound_note")
+        color: Qt.darker(root.foreground, 1.4)
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        renderType: Text.NativeRendering
+      }
+
+      Row {
+        spacing: Style.space(4)
+
+        Repeater {
+          model: ["off", "quiet", "full"]
+
+          Button {
+            required property string modelData
+            text: root.t("settings.sound_" + modelData)
+            foreground: root.foreground
+            fontFamily: root.fontFamily
+            fontSize: Style.font.bodySmall
+            bordered: true
+            selected: root.setting("sound", "off") === modelData
+            onClicked: root.settingChanged("sound", modelData)
+          }
+        }
+      }
+    }
+
     PanelSeparator { width: parent.width }
 
     // ---- The bar, and being told things.

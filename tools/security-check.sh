@@ -71,7 +71,7 @@ else
 fi
 
 # Every detached command starts with a program this README lists.
-allowed='mkdir|root\.notifyBin|"omarchy"'
+allowed='mkdir|root\.notifyBin|"omarchy"|"pw-play"'
 detached=$(grep -rn -A1 'execDetached(\[' "${code[@]}" 2>/dev/null \
   | grep -vE 'execDetached\(\[$|^--' | grep -E '^\S+:[0-9]+[:-]' \
   | grep -vE "execDetached\\(\\[\"?($allowed)" | grep -vE "^[^:]+:[0-9]+-[[:space:]]*(\"?($allowed))" || true)
@@ -96,12 +96,32 @@ fi
 links=$(find . -type l -not -path './.git/*' 2>/dev/null || true)
 [ -z "$links" ] && pass "no symlinks" || { fail "no symlinks"; printf '%s\n' "$links" | sed 's/^/        /' >&2; }
 
-# Nothing binary except the preview images.
-binaries=$(find . -type f -not -path './.git/*' -not -name '*.png' \
+# Nothing binary except the previews and the generated audio. Audio is
+# allowed because it is **generated**, not recorded: tools/make-sounds.py is
+# its source, the way the sprite grids are their own. A .wav that appeared
+# without the script producing it is exactly what this is here to catch.
+binaries=$(find . -type f -not -path './.git/*' -not -name '*.png' -not -name '*.wav' \
   -exec file --mime-type {} \; 2>/dev/null \
   | grep -vE 'text/|inode/|application/json' || true)
-[ -z "$binaries" ] && pass "no binaries but the previews" \
-  || { fail "no binaries but the previews"; printf '%s\n' "$binaries" | sed 's/^/        /' >&2; }
+[ -z "$binaries" ] && pass "no binaries but the previews and the generated audio" \
+  || { fail "no binaries but the previews and the generated audio"; printf '%s\n' "$binaries" | sed 's/^/        /' >&2; }
+
+# Every sound in the tree has to be one the generator makes, and running the
+# generator has to reproduce it byte for byte. Otherwise "generated from code"
+# is a claim rather than a fact.
+if command -v python3 >/dev/null 2>&1; then
+  before=$(find assets/sounds -name '*.wav' -exec sha256sum {} \; 2>/dev/null | sort)
+  python3 tools/make-sounds.py >/dev/null 2>&1
+  after=$(find assets/sounds -name '*.wav' -exec sha256sum {} \; 2>/dev/null | sort)
+  if [ "$before" = "$after" ]; then
+    pass "every sound is reproduced exactly by tools/make-sounds.py"
+  else
+    fail "a sound in the tree is not what the generator produces"
+    diff <(printf '%s\n' "$before") <(printf '%s\n' "$after") | sed 's/^/        /' >&2 || true
+  fi
+else
+  echo "  skip  sound reproducibility (no python3)"
+fi
 
 # The three opt-ins are off in the manifest.
 for key in sensorAgents sensorGit bardEnabled; do

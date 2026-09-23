@@ -385,5 +385,12 @@
   "potion.travellers_flask.name": "Traveller's Flask",
   "potion.travellers_flask.note": "One point of energy — one more fight, or one more road.",
   "chron.drank.0": "{name} drinks {potion}.",
-  "chron.drank.1": "{potion}, and none too soon."
+  "chron.drank.1": "{potion}, and none too soon.",
+  "settings.sound": "Sound",
+  "settings.sound_note": "A plucked theme while a fight is on, and a single note for a level or a find. Nothing plays outside those, and nothing plays at all unless you switch it on here.",
+  "settings.sound_off": "Off",
+  "settings.sound_quiet": "Quiet",
+  "settings.sound_full": "Full",
+  "chron.arena_lost_xp.0": "{name} goes down, and wakes in the tavern {xp} experience poorer.",
+  "chron.arena_lost_xp.1": "Not this time. {xp} experience left on the sand."
 }

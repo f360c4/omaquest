@@ -15,11 +15,22 @@ All notable changes to this project are documented here. The format follows
 - `omarchy-shell f360c4.omaquest stroll`, so the walk can go on a keybind.
 
 ### Added
+- **Sound**, off by default: a plucked theme while a fight is on, and a single
+  note for a level or a find. Generated from code by `tools/make-sounds.py`,
+  not recorded — Karplus-Strong, about fifteen lines of arithmetic.
+- A Healing Draught can be drunk **inside** a fight, which is the only reason
+  to carry one.
 - **Potions.** A Healing Draught returns half your health and gets you off the
   tavern floor; a Traveller's Flask returns a point of energy. Both are always
   in the merchant's stock, capped at five, and both work mid-fight.
 
 ### Changed
+- **Losing a fight now costs a quarter of your progress toward the current
+  level.** Never a level, a title, gold, a material, an item or a feat, and
+  never the lifetime experience the achievements read. The arena was free to
+  lose, and a game with no stakes is a game nobody returns to.
+- Potions cost what a decision costs: 110 and 170 gold, against a good day's
+  takings of about 150.
 - Closing the panel forgets which tab was open and comes back to the Hero
   sheet — unless a fight is in progress.
 - Gear is the inventory: the three slots, everything that fits them with
