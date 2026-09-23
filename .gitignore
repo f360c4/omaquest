@@ -1,0 +1,11 @@
+# A save that could not be parsed is moved aside rather than deleted. It is
+# the player's, and it never belongs in the repository.
+save.corrupt-*.json
+
+# tools/lint.sh builds its import root in a scratch directory, but an older
+# copy of it or a hand-made one would land here.
+.qmllint/
+
+*.swp
+*~
+.DS_Store

@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "id": "f360c4.omaquest",
+  "name": "Omaquest",
+  "version": "0.1.0",
+  "author": "Luiz Felipe - F360c4",
+  "license": "MIT",
+  "description": "An offline RPG in the Omarchy bar. Your machine is the realm: workspaces, windows, music, rest and crashes become the hero's chronicle. Fight in the arena, send expeditions, forge gear. Pick a race and a class. No network, no grind, never interrupts.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Omaquest",
+    "description": "Pixel hero in the bar; chronicle, arena, expeditions and forge in the panel.",
+    "category": "Fun",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "language": "auto",
+      "showLevel": false,
+      "notifyLevelUp": true,
+      "notifyBoss": true,
+      "notifyExpedition": false,
+      "notifyQuests": false,
+      "sensorAgents": false,
+      "sensorGit": false,
+      "bardEnabled": false
+    },
+    "schema": [
+      {
+        "key": "language",
+        "type": "enum",
+        "label": "Language",
+        "options": [
+          "auto",
+          "en",
+          "pt-BR"
+        ],
+        "defaultValue": "auto",
+        "description": "Language of the panel. Auto follows the LANG environment variable and falls back to English."
+      },
+      {
+        "key": "showLevel",
+        "type": "boolean",
+        "label": "Show the hero's level in the bar",
+        "defaultValue": false,
+        "description": "Adds 'Lv N' beside the sprite on horizontal bars. Vertical bars always show the sprite alone."
+      },
+      {
+        "key": "notifyLevelUp",
+        "type": "boolean",
+        "label": "Notify on level up",
+        "defaultValue": true,
+        "description": "One desktop notification when the hero reaches a new level. At most two notifications a day in total."
+      },
+      {
+        "key": "notifyBoss",
+        "type": "boolean",
+        "label": "Notify when a boss appears",
+        "defaultValue": true,
+        "description": "A boss appears when a program crashes (systemd coredump) and every weekend. At most two notifications a day in total."
+      },
+      {
+        "key": "notifyExpedition",
+        "type": "boolean",
+        "label": "Notify when an expedition returns",
+        "defaultValue": false,
+        "description": "Off by default; the panel already shows the result when you open it."
+      },
+      {
+        "key": "notifyQuests",
+        "type": "boolean",
+        "label": "Notify when the daily quests are done",
+        "defaultValue": false,
+        "description": "Off by default; the panel already shows the Seal when you open it."
+      },
+      {
+        "key": "sensorAgents",
+        "type": "boolean",
+        "label": "Arcane sensor: AI agent usage",
+        "defaultValue": false,
+        "description": "Reads token totals from ~/.local/state/omarchy/agents/usage/. Numbers only, never prompts or answers."
+      },
+      {
+        "key": "sensorGit",
+        "type": "boolean",
+        "label": "Arcane sensor: git commits in ~/Work",
+        "defaultValue": false,
+        "description": "Counts commits with git rev-list. Never reads messages, file names or repository names."
+      },
+      {
+        "key": "bardEnabled",
+        "type": "boolean",
+        "label": "The Bard (AI chronicle, on click only)",
+        "defaultValue": false,
+        "description": "Adds a button that launches your default Omarchy agent to write today's chronicle. Uses your own agent and your own quota; nothing runs without the click."
+      }
+    ]
+  }
+}
