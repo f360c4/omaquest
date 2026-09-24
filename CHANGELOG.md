@@ -96,6 +96,10 @@ All notable changes to this project are documented here. The format follows
   it — starting over, which costs nothing, had one.
 - `StatBar` left a line of empty space above any bar with nothing written on
   it.
+- English wrote "a Orc Archer" and "no effect for a Archer". `{a:race}` and
+  `{A:race}` now pick the article from the word that follows. It is English
+  markup that only en.json writes, and it works whichever dictionary is loaded,
+  because a missing key falls back to the English string.
 
 
 - The AI sensor refreshes the usage files itself with `omarchy agent

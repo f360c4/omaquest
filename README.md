@@ -18,7 +18,14 @@ few minutes, not an evening.
 It never interrupts you, never punishes you for leaving, and never touches the
 network.
 
-![preview](preview.png)
+Ask, and they will get up and walk across the bottom of your screen.
+
+![The hero walking across the desktop](docs/stroll.gif)
+
+<p align="center">
+  <img src="docs/panel.gif" width="400"
+       alt="The panel: hero sheet, gear, chronicle, feats, arena, expeditions, forge and settings">
+</p>
 
 | Hero | Arena | Chronicle | Forge |
 |---|---|---|---|

@@ -65,9 +65,29 @@ QtObject {
     if (text === undefined) text = fallbackStrings[key]
     if (text === undefined) return key
     if (!vars) return text
-    return String(text).replace(/\{(\w+)\}/g, function(match, name) {
-      return vars[name] !== undefined ? String(vars[name]) : match
+    return String(text).replace(/\{(?:([aA]):)?(\w+)\}/g, function(match, article, name) {
+      if (vars[name] === undefined) return match
+      var value = String(vars[name])
+      if (!article) return value
+      return indefinite(value, article === "A") + " " + value
     })
+  }
+
+  // `{a:race}` renders "an Orc" and "a Human"; `{A:race}` capitalises it for
+  // the start of a sentence.
+  //
+  // English markup, used only in en.json. A dictionary that does not want it
+  // simply does not write it — and because a missing key falls back to the
+  // English string, the rule has to work regardless of which language is
+  // loaded, so it never asks.
+  //
+  // The real rule is the sound, not the letter ("a unicorn", "an hour"), but
+  // every word this is ever applied to is a race or a calling, and there are
+  // eleven of them.
+  function indefinite(word, capital) {
+    var vowel = /^[aeiou]/i.test(String(word))
+    if (capital) return vowel ? "An" : "A"
+    return vowel ? "an" : "a"
   }
 
   property FileView fallbackFile: FileView {
