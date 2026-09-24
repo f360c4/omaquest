@@ -4,9 +4,22 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] — 2026-09-24
 
 ### Added
+- **A Feats tab.** They were a row of bare names at the foot of the hero
+  sheet, which is how somebody ends up asking what "Collector" is. Each feat
+  now states its condition in a sentence and carries its count — and says
+  whether it counts a day, a life, or right now, because a feat that quietly
+  resets at midnight is worse than no feat at all.
+- **The chest is a section of its own**, listing what it holds, how many of
+  each, and what each one fetches. Selling used to exist only inside a slot's
+  disclosure: you had to click "wear" on the right slot before a sell button
+  appeared anywhere.
+- Counts everywhere they were folded away. The chest is a list with repeats in
+  it, so two Iron Swords looked exactly like one — right up until you sold one
+  and the row stayed.
+
 - The Archer, a sixth class, and the first to look through two domains at once
   rather than one: Exploration and Combat at ×1.25. Volley fires twice, so
   armour is paid for twice — strong against a slime, poor against a golem.
@@ -14,7 +27,6 @@ All notable changes to this project are documented here. The format follows
   what the chest is full of. Gold finally has somewhere to go.
 - `omarchy-shell f360c4.omaquest stroll`, so the walk can go on a keybind.
 
-### Added
 - **Sound**, off by default: a plucked theme while a fight is on, and a single
   note for a level or a find. Generated from code by `tools/make-sounds.py`,
   not recorded — Karplus-Strong, about fifteen lines of arithmetic.
@@ -27,24 +39,12 @@ All notable changes to this project are documented here. The format follows
 - `gitPath`: where the commit sensor looks. `~/Work` was a guess about somebody
   else's disk.
 
-### Fixed
-- The AI sensor refreshes the usage files itself with `omarchy agent
-  usage-update` (0.9 s, every 15 minutes, only while switched on), so nothing
-  else has to be enabled for it to work. It used to read whatever Omarchy's
-  Agents widget last wrote, which on a machine with that widget disabled was a
-  number five days old.
-- The arena result now prints what a fight cost and what it brought, and a
-  defeat spells out what it did not take.
-- The Bard's button used to vanish once the day had a song, which looks the
-  same as the feature breaking. It says so instead.
-- The AI sensor could be switched on, do nothing for ever, and say nothing
-  about it — the files it reads are written by Omarchy's Agents widget, and
-  with that disabled they simply freeze. It now notices and says so.
-- **Potions.** A Healing Draught returns half your health and gets you off the
-  tavern floor; a Traveller's Flask returns a point of energy. Both are always
-  in the merchant's stock, capped at five, and both work mid-fight.
-
 ### Changed
+- **The Bard can be asked as often as you like.** The once-a-day limit was
+  being careful with somebody else's tokens, which is not carefulness so much
+  as deciding for them. A minute between asks remains, which guards a
+  double-click rather than a decision.
+
 - **Losing a fight now costs a quarter of your progress toward the current
   level.** Never a level, a title, gold, a material, an item or a feat, and
   never the lifetime experience the achievements read. The arena was free to
@@ -90,6 +90,30 @@ All notable changes to this project are documented here. The format follows
   gesture in Portuguese.
 
 ### Fixed
+- **Changing calling spent the gold and swapped the class on the down-press**,
+  with no question in between. It is the only button here that costs something
+  and cannot be undone, and it was the only one without a dialog in front of
+  it — starting over, which costs nothing, had one.
+- `StatBar` left a line of empty space above any bar with nothing written on
+  it.
+
+
+- The AI sensor refreshes the usage files itself with `omarchy agent
+  usage-update` (0.9 s, every 15 minutes, only while switched on), so nothing
+  else has to be enabled for it to work. It used to read whatever Omarchy's
+  Agents widget last wrote, which on a machine with that widget disabled was a
+  number five days old.
+- The arena result now prints what a fight cost and what it brought, and a
+  defeat spells out what it did not take.
+- The Bard's button used to vanish once the day had a song, which looks the
+  same as the feature breaking. It says so instead.
+- The AI sensor could be switched on, do nothing for ever, and say nothing
+  about it — the files it reads are written by Omarchy's Agents widget, and
+  with that disabled they simply freeze. It now notices and says so.
+- **Potions.** A Healing Draught returns half your health and gets you off the
+  tavern floor; a Traveller's Flask returns a point of energy. Both are always
+  in the merchant's stock, capped at five, and both work mid-fight.
+
 - Two sprites were never drawn — `boss_daemon_idle_a` and `slime_idle_a` — so
   every crash boss and every slime rendered as empty space. `check-sprites.sh`
   now verifies every name the code can ask for, and found the second itself.

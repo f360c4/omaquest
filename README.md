@@ -1,11 +1,22 @@
 # Omaquest
 
-An offline RPG that lives in the [Omarchy](https://omarchy.org) bar. Your
-machine is the realm: workspaces, windows, music, rest and crashes become your
-hero's chronicle. Open the panel when you feel like it — fight in the arena,
-send an expedition, forge gear. Pick a race and a class.
+**Give your machine a hero.**
 
-Never interrupts, never punishes, never touches the network.
+Omaquest is an offline RPG that lives in the [Omarchy](https://omarchy.org)
+bar. Your desktop is the realm: the workspaces you cross, the windows you
+open, the music you leave playing, the hours you sit and the times you get up
+all become experience, and a line in somebody's chronicle.
+
+And when a program on your machine crashes, it becomes a boss — named after
+the binary that died, waiting in the arena, angrier every time it falls over
+again.
+
+Open the panel when you feel like it. Fight something, send an expedition,
+forge a sword, or just read what your day looked like from the other side. A
+few minutes, not an evening.
+
+It never interrupts you, never punishes you for leaving, and never touches the
+network.
 
 ![preview](preview.png)
 
@@ -145,9 +156,9 @@ touch nothing else.
 
 The agent never opens your save. It reads a page of prose the plugin wrote for
 it, which is both faster than asking it to infer a JSON schema and less to hand
-over. It uses your default agent and your quota. **Nothing runs without the
-click**, at most once a day, and the plugin never decides to spend a token on
-its own.
+over. It uses your default agent and your quota, as often as you ask — asking
+again rewrites the day's song. **Nothing runs without the click**, and the
+plugin never decides to spend a token on its own.
 
 The button is hidden entirely if `omarchy` is not on your PATH.
 
