@@ -235,12 +235,14 @@ test("regeneration never passes the maximum", () => {
   assertEqual(healed.energy, healed.energyMax, "and energy with it")
 })
 
-test("health regenerates at ten percent of the maximum an hour", () => {
+test("health regenerates at the published rate an hour", () => {
+  // Read from the rule rather than written out again here: a test that
+  // repeats the constant only proves the constant was typed twice.
   const hero = heroOf("human", "warrior")
   hero.hp = 1
   hero.hpUpdatedAt = T0
   const after = Rules.regen(hero, { type: "caravan" }, T0 + 3600)
-  assertEqual(after.hp, 1 + Math.floor(after.hpMax * 0.10), "one hour")
+  assertEqual(after.hp, 1 + Math.floor(after.hpMax * Rules.HP_REGEN_PER_HOUR), "one hour")
 })
 
 test("energy regenerates every two hours, and faster for an automaton", () => {
@@ -1447,6 +1449,83 @@ test("the feat board reads the same numbers the events that grant them read", ()
   assertEqual(earned.done, true, "still earned")
   assertEqual(earned.progress, earned.target, "and still reads full")
   assertEqual(Rules.achievementBoard(state)[0].done, true, "earned ones sort first")
+})
+
+test("a win pays a breather, and never past full", () => {
+  // Set up a fight one blow from won, at a chosen share of health.
+  //
+  // The assertion is on the fight, not on the hero: the same win can also
+  // carry a level, and a level raises the maximum and the health with it. The
+  // first version of this test read `hero.hp` afterwards and failed on a
+  // number that was right for a reason it had not accounted for.
+  function onePunchFrom(share) {
+    let state = freshState("human", "warrior")
+    const wanderer = Rules.wanderers(state.day.date, state.hero.level)[0]
+    state = World.apply(state, { type: "start_fight", kind: "wanderer", id: wanderer.id }, T0).state
+
+    const top = Rules.hpMax(state.hero)
+    const hp = Math.max(1, Math.round(top * share))
+    state.hero.hp = hp
+    state.arena.heroHp = hp
+    state.arena.enemyHp = 1
+
+    const after = World.apply(state, { type: "fight_action", action: "attack" }, T0).state
+    return { before: hp, top: top, arena: after.arena }
+  }
+
+  const hurt = onePunchFrom(0.3)
+  assertEqual(hurt.arena.outcome, "won", "the enemy had one point left")
+  assertEqual(hurt.arena.healed, Math.round(hurt.top * Rules.WIN_HEAL), "the published share")
+  assertEqual(hurt.arena.heroHp, hurt.before + hurt.arena.healed, "and it landed on the hero")
+
+  const brimming = onePunchFrom(0.99)
+  assertEqual(brimming.arena.heroHp, brimming.top, "capped at full, never past it")
+  assertEqual(brimming.arena.healed, brimming.top - brimming.before, "only what was missing")
+})
+
+test("every calling has a weapon noun, in every dictionary", () => {
+  // The three weapon recipes are templates now, so a class without a noun
+  // renders "Iron {weapon}" in the forge and nobody finds out until they play
+  // that class.
+  const fs = require("fs")
+  const path = require("path")
+  const dir = path.join(__dirname, "..", "i18n")
+
+  for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".json"))) {
+    const dict = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"))
+
+    for (const cls of Rules.CLASS_IDS) {
+      const key = Rules.weaponNoun({ cls: cls })
+      assertEqual(key, "weapon.noun." + cls, "the key is built from the calling")
+      if (!dict[key]) throw new Error(`${file}: no weapon noun for ${cls}`)
+    }
+
+    // And the templates have somewhere to put it.
+    for (const recipe of Rules.RECIPES.filter((r) => r.slot === Rules.WEAPON_SLOT)) {
+      const template = dict[Rules.itemNameKey(recipe.id)]
+      if (!template || template.indexOf("{weapon}") === -1)
+        throw new Error(`${file}: ${recipe.id} does not name the weapon`)
+    }
+  }
+
+  // An unknown or missing calling still names something rather than crashing.
+  assertEqual(Rules.weaponNoun(null), "weapon.noun.warrior", "a default")
+  assertEqual(Rules.weaponNoun({ cls: "nonsense" }), "weapon.noun.warrior", "and for nonsense")
+})
+
+test("a stronger enemy is worth more experience than a weaker one", () => {
+  // The whole reason to pick the hard one off the list.
+  const hero = freshState("human", "warrior").hero
+  const random = Rules.rng(1)
+  const xp = (tier, boss) =>
+    Rules.combatRewards(hero, Rules.enemyFor("goblin", tier, hero, boss), 0, random).xp
+
+  const t1 = xp(1, false), t2 = xp(2, false), t3 = xp(3, false), boss = xp(4, true)
+  if (!(t1 < t2 && t2 < t3 && t3 < boss))
+    throw new Error(`experience does not rise with tier: ${t1}, ${t2}, ${t3}, boss ${boss}`)
+
+  // And the gap is worth crossing, not a rounding difference.
+  if (t3 < t1 * 2) throw new Error(`tier 3 pays ${t3} against tier 1 at ${t1}: not worth the risk`)
 })
 
 test("a second copy survives selling the first, and the count is conserved", () => {

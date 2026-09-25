@@ -31,6 +31,12 @@ Item {
     return game ? game.t(key, vars) : key
   }
 
+  // Weapons are named for the calling holding them, so the name comes from the
+  // service, which is the only thing that knows both the hero and the words.
+  function itemName(id) {
+    return game ? game.itemName(id) : String(id)
+  }
+
   // Bosses first — they are the ones with a clock on them — then the day's
   // three wanderers.
   readonly property var threats: {
@@ -86,7 +92,12 @@ Item {
     if (Rules.num(loot.gold) > 0) parts.push(root.t("expedition.loot_gold", { gold: Rules.num(loot.gold) }))
     for (var material in (loot.materials || {}))
       parts.push(root.t("material." + material) + " x" + Rules.num(loot.materials[material]))
-    if (loot.item) parts.push(root.t("item." + loot.item + ".name"))
+    if (loot.item) parts.push(root.itemName(loot.item))
+    // The breather belongs on this line too: it is the difference between one
+    // fight a day and two, and nobody would notice a health bar that moved
+    // while they were reading the loot.
+    if (Rules.num(arena.healed) > 0)
+      parts.push(root.t("arena.breather", { hp: Rules.num(arena.healed) }))
     return parts.join(" · ")
   }
 

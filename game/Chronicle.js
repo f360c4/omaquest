@@ -34,7 +34,7 @@ function baseParams(state) {
 
 // Ids inside `p` are dictionary keys, not text. Expanding them here is what
 // keeps "dwarf" out of a Portuguese sentence.
-function expand(t, params) {
+function expand(t, params, state) {
   var out = {}
   for (var key in params) out[key] = params[key]
 
@@ -43,7 +43,12 @@ function expand(t, params) {
   if (out.title !== undefined) out.title = t("title." + out.title)
   if (out.quest !== undefined) out.quest = t("quest." + out.quest + ".name")
   if (out.achievement !== undefined) out.achievement = t("achievement." + out.achievement + ".name")
-  if (out.item !== undefined) out.item = t("item." + out.item + ".name")
+  // Named for the calling holding it, the same way the forge and the chest
+  // name it. A chronicle that says "sword" while the panel says "bow" is two
+  // records of the same afternoon.
+  if (out.item !== undefined)
+    out.item = t(Rules.itemNameKey(out.item),
+      { weapon: t(Rules.weaponNoun(state && state.hero)) })
   if (out.material !== undefined) out.material = t("material." + out.material)
   if (out.potion !== undefined) out.potion = t("potion." + out.potion + ".name")
   if (out.place !== undefined) out.place = t("dest." + out.place)
@@ -73,7 +78,7 @@ function render(entry, t, state) {
   var params = baseParams(state)
   for (var key in (entry.p || {})) params[key] = entry.p[key]
 
-  return t("chron." + type + "." + variant, expand(t, params))
+  return t("chron." + type + "." + variant, expand(t, params, state))
 }
 
 // ---- What is worth a line of its own, and what is worth a number.

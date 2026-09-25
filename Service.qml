@@ -91,6 +91,15 @@ Item {
     return i18n.t(key, vars)
   }
 
+  // An item's name, which for the three weapons depends on the calling holding
+  // it: "Iron Sword" for a warrior, "Iron Bow" for an archer. The other six
+  // recipes ignore the variable.
+  function itemName(id) {
+    return i18n.t(Rules.itemNameKey(id), {
+      weapon: i18n.t(Rules.weaponNoun(root.world ? root.world.hero : null))
+    })
+  }
+
   function applySettings(values) {
     root.settings = values || ({})
   }

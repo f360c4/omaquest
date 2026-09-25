@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] — 2026-09-24
+
+### Changed
+- **An archer forges a bow, not a sword.** The three weapon recipes are one
+  weapon at three tiers, and which weapon it is now depends on the calling
+  holding it — sword, dagger, lute, sickle, staff, bow. Same cost, same
+  damage, and changing calling changes what is in your hands, which is the
+  promise the sprite was already making on its own.
+- **Winning heals 15% of your maximum.** A win used to leave you on a third of
+  your health with a tenth of it coming back an hour, so the second fight of a
+  day was a losing one and most days held exactly one. Measured over six
+  classes and eight levels, this moves the health you walk away with from 33%
+  to 48% and moves the win rates by nothing: 82/76/62 at tier 1/2/3 before and
+  after. It buys recovery, not victory.
+- Health comes back at 12% of the maximum an hour rather than 10%.
+- **A stronger enemy is worth more.** Experience went 20 / 25 / 30 across the
+  three tiers — half again as much for a fight that cost the same and could be
+  lost. It is 20 / 34 / 52 now, and a tier 4 boss is 240. Nothing pays less
+  than it used to; the hard one simply became worth choosing.
+
+### Fixed
+- The arena result says what the breather gave back, beside the loot.
+
 ## [0.2.1] — 2026-09-24
 
 ### Fixed

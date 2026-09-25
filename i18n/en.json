@@ -229,9 +229,9 @@
   "material.crystal": "Theme crystal",
   "material.oil": "Gear oil",
   "material.core": "Core fragment",
-  "item.iron_sword.name": "Iron Sword",
-  "item.rune_blade.name": "Rune Blade",
-  "item.core_sword.name": "Core Sword",
+  "item.iron_sword.name": "Iron {weapon}",
+  "item.rune_blade.name": "Rune {weapon}",
+  "item.core_sword.name": "Core {weapon}",
   "item.leather_vest.name": "Leather Vest",
   "item.plated_mail.name": "Plated Mail",
   "item.core_aegis.name": "Core Aegis",
@@ -421,5 +421,12 @@
   "achievement.collector.note": "Hold at least one of all six materials at the same time.",
   "achievement.constant.note": "Seal the day seven days running.",
   "achievement.traveller.note": "Finish ten expeditions.",
-  "achievement.myth.note": "Reach level 30, which is the ceiling."
+  "achievement.myth.note": "Reach level 30, which is the ceiling.",
+  "arena.breather": "+{hp} health, catching your breath",
+  "weapon.noun.warrior": "Sword",
+  "weapon.noun.rogue": "Dagger",
+  "weapon.noun.bard": "Lute",
+  "weapon.noun.druid": "Sickle",
+  "weapon.noun.mage": "Staff",
+  "weapon.noun.archer": "Bow"
 }

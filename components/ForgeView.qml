@@ -30,6 +30,12 @@ Item {
     return game ? game.t(key, vars) : key
   }
 
+  // Weapons are named for the calling holding them, so the name comes from the
+  // service, which is the only thing that knows both the hero and the words.
+  function itemName(id) {
+    return game ? game.itemName(id) : String(id)
+  }
+
   function costLine(recipe) {
     if (!root.hero) return ""
     var cost = Rules.costFor(root.hero, recipe)
@@ -264,7 +270,7 @@ Item {
               Text {
                 width: parent.width
                 textFormat: Text.PlainText
-                text: root.t("item." + recipeRow.modelData.id + ".name")
+                text: root.itemName(recipeRow.modelData.id)
                   + (recipeRow.worn ? " · " + root.t("forge.worn") : "")
                 color: recipeRow.worn ? Color.accent : root.foreground
                 font.family: root.fontFamily

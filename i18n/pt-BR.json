@@ -229,9 +229,9 @@
   "material.crystal": "Cristal de tema",
   "material.oil": "Óleo de engrenagem",
   "material.core": "Fragmento de núcleo",
-  "item.iron_sword.name": "Espada de Ferro",
-  "item.rune_blade.name": "Lâmina Rúnica",
-  "item.core_sword.name": "Espada do Núcleo",
+  "item.iron_sword.name": "{weapon} de Ferro",
+  "item.rune_blade.name": "{weapon} de Runas",
+  "item.core_sword.name": "{weapon} do Núcleo",
   "item.leather_vest.name": "Gibão de Couro",
   "item.plated_mail.name": "Cota de Placas",
   "item.core_aegis.name": "Égide do Núcleo",
@@ -421,5 +421,12 @@
   "achievement.collector.note": "Tenha ao mesmo tempo pelo menos um de cada um dos seis materiais.",
   "achievement.constant.note": "Sele o dia sete dias seguidos.",
   "achievement.traveller.note": "Complete dez expedições.",
-  "achievement.myth.note": "Chegue ao nível 30, que é o teto."
+  "achievement.myth.note": "Chegue ao nível 30, que é o teto.",
+  "arena.breather": "+{hp} de vida, recuperando o fôlego",
+  "weapon.noun.warrior": "Espada",
+  "weapon.noun.rogue": "Adaga",
+  "weapon.noun.bard": "Alaúde",
+  "weapon.noun.druid": "Foice",
+  "weapon.noun.mage": "Cajado",
+  "weapon.noun.archer": "Arco"
 }

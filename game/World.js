@@ -634,6 +634,14 @@ function winFight(state, at, random) {
   var effects = []
   var isBoss = arena.kind !== "wanderer"
 
+  // The breather. Here rather than in the round, so it lands once on the
+  // winning blow and never on a fight still running.
+  var top = Rules.hpMax(state.hero)
+  arena.healed = Math.min(Math.round(top * Rules.WIN_HEAL), top - Rules.num(state.hero.hp))
+  state.hero.hp = Rules.clamp(Rules.num(state.hero.hp) + arena.healed, 1, top)
+  state.hero.hpUpdatedAt = at
+  arena.heroHp = state.hero.hp
+
   var loot = Rules.combatRewards(state.hero, arena.enemy, state.streak.count, random)
   // Kept on the fight so the result screen can name it. Otherwise winning is
   // a line saying "won" and a number that moved somewhere else.

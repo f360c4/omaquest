@@ -32,6 +32,12 @@ Item {
     return game ? game.t(key, vars) : key
   }
 
+  // Weapons are named for the calling holding them, so the name comes from the
+  // service, which is the only thing that knows both the hero and the words.
+  function itemName(id) {
+    return game ? game.itemName(id) : String(id)
+  }
+
   function wornIn(slot) {
     return root.hero && root.hero.equipment ? (root.hero.equipment[slot] || "") : ""
   }
@@ -171,7 +177,7 @@ Item {
               elide: Text.ElideRight
               textFormat: Text.PlainText
               text: slotBlock.worn
-                ? root.t("item." + slotBlock.worn + ".name")
+                ? root.itemName(slotBlock.worn)
                 : root.t("ui.gear_empty")
               color: slotBlock.worn ? root.foreground : Qt.darker(root.foreground, 2.0)
               font.family: root.fontFamily
@@ -237,7 +243,7 @@ Item {
                   textFormat: Text.PlainText
                   // Said next to the item rather than only at the top of the
                   // slot, because the list is where the comparison happens.
-                  text: root.t("item." + option.modelData + ".name")
+                  text: root.itemName(option.modelData)
                     + (option.worn ? "  " + root.t("ui.gear_equipped") : root.times(option.modelData))
                   color: option.worn ? Color.accent : root.foreground
                   font.family: root.fontFamily
@@ -334,7 +340,7 @@ Item {
               width: parent.width
               elide: Text.ElideRight
               textFormat: Text.PlainText
-              text: root.t("item." + chestRow.modelData + ".name") + root.times(chestRow.modelData)
+              text: root.itemName(chestRow.modelData) + root.times(chestRow.modelData)
               color: root.foreground
               font.family: root.fontFamily
               font.pixelSize: Style.font.bodySmall

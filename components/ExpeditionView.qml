@@ -50,6 +50,12 @@ Item {
     return game ? game.t(key, vars) : key
   }
 
+  // Weapons are named for the calling holding them, so the name comes from the
+  // service, which is the only thing that knows both the hero and the words.
+  function itemName(id) {
+    return game ? game.itemName(id) : String(id)
+  }
+
   function countdown(seconds) {
     var hours = Math.floor(seconds / 3600)
     var minutes = Math.floor((seconds % 3600) / 60)
@@ -69,7 +75,7 @@ Item {
     var parts = [root.t("expedition.loot_gold", { gold: Rules.num(result.gold) })]
     for (var material in result.materials)
       parts.push(root.t("material." + material) + " ×" + Rules.num(result.materials[material]))
-    if (result.item) parts.push(root.t("item." + result.item + ".name"))
+    if (result.item) parts.push(root.itemName(result.item))
     return parts.join(" · ")
   }
 
