@@ -82,7 +82,7 @@ else
 fi
 
 # Every detached command starts with a program this README lists.
-allowed='mkdir|root\.notifyBin|"omarchy"|"pw-play"'
+allowed='mkdir|chmod|root\.notifyBin|"omarchy"|"pw-play"'
 detached=$(grep -rn -A1 'execDetached(\[' "${code[@]}" 2>/dev/null \
   | grep -vE 'execDetached\(\[$|^--' | grep -E '^\S+:[0-9]+[:-]' \
   | grep -vE "execDetached\\(\\[\"?($allowed)" | grep -vE "^[^:]+:[0-9]+-[[:space:]]*(\"?($allowed))" || true)
@@ -142,6 +142,21 @@ if command -v python3 >/dev/null 2>&1; then
   fi
 else
   echo "  skip  sound reproducibility (no python3)"
+fi
+
+# The state directory holds a record of what ran on this machine. It is made
+# private on the way in and made private again on every start, because `mkdir
+# -m` does nothing to a directory that already exists.
+if grep -q '"mkdir", "-p", "-m", "700"' Service.qml && grep -q '"chmod", "700"' Service.qml; then
+  pass "the state directory is created private and kept private"
+else
+  fail "the state directory is not made 0700"
+fi
+
+if grep -q '"chmod", "600"' Service.qml; then
+  pass "the save and the chronicle are made 0600"
+else
+  fail "the save and the chronicle are not made 0600"
 fi
 
 # The three opt-ins are off in the manifest.

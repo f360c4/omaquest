@@ -148,6 +148,13 @@ Never `notify-send` (the Omarchy notification server drops it), never `curl`,
 - `bard/YYYY-MM-DD.md` — written by **your** agent, only if you enable the Bard
   and click the button.
 
+All of it is private. The directory is made `0700` when it is created and
+again on every start — `mkdir -m` does nothing to a directory that already
+exists, so an install that predates this is repaired rather than left behind —
+and the save and the chronicle are `0600`. On a machine with more than one
+account, a default umask would otherwise leave the chronicle, which records the
+names of programs that crashed and when, readable by anybody with a login.
+
 Plus its own settings entry in `~/.config/omarchy/shell.json`, through the
 shell's API, which only lets a plugin write its own.
 

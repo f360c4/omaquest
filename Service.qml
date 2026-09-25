@@ -297,6 +297,11 @@ Item {
       root.chronicleDirty = false
     }
     root.dirty = false
+
+    if (!root.filesTightened) {
+      root.filesTightened = true
+      tightenLater.start()
+    }
   }
 
   FileView {
@@ -317,13 +322,60 @@ Item {
     printErrors: false
   }
 
-  // ---- Loading. Three steps, each one a process with a literal argv:
-  //      make the directory, read the save, read the chronicle.
+  // ---- Loading. Four steps, each one a process with a literal argv: make
+  //      the directory, make it private, read the save, read the chronicle.
+  //
+  //      Private matters here. The chronicle is a record of what happened on
+  //      this machine — the names of programs that crashed, and when — and on
+  //      a box with more than one account a default umask leaves that
+  //      world-readable. The directory is the boundary: nobody else can walk
+  //      into a 0700 directory whatever the files inside it say.
   Process {
     id: ensureDir
-    command: ["mkdir", "-p", root.stateDir]
+    command: ["mkdir", "-p", "-m", "700", root.stateDir]
     running: true
-    onExited: saveReader.running = true
+    onExited: tightenDir.running = true
+  }
+
+  // `mkdir -m` only sets the mode on a directory it creates, so every install
+  // that predates this still has the old one. Said again, unconditionally.
+  Process {
+    id: tightenDir
+    // The Bard's directory too, when there is one. `chmod` does each argument
+    // it can and complains about the rest, which is why the complaint is
+    // collected and dropped.
+    command: ["chmod", "700", root.stateDir, root.bardDir]
+    stderr: StdioCollector {}
+    onExited: {
+      // Files from an earlier session exist right now, so fix them here. On a
+      // brand new install there is nothing yet, and the pass after the first
+      // write below is the one that catches it.
+      tightenFiles.running = true
+      saveReader.running = true
+    }
+  }
+
+  // Once is enough, because the writes are atomic and the atomic write copies
+  // the permissions of the file it replaces — 0600 set here survives every
+  // save that follows. That was measured rather than assumed.
+  property bool filesTightened: false
+
+  Process {
+    id: tightenFiles
+    command: ["chmod", "600", root.savePath, root.chroniclePath]
+    // A file that is not there yet is not an error worth a line in the log.
+    stderr: StdioCollector {}
+  }
+
+  // A beat after the first write, not inside it. Run in the same turn, the
+  // chmod raced the chronicle being written and lost: the file landed with
+  // the mode of the moment before, and stayed world-readable. Caught by
+  // looking at `ls -l` after the fix rather than trusting it.
+  Timer {
+    id: tightenLater
+    interval: 800
+    repeat: false
+    onTriggered: tightenFiles.running = true
   }
 
   Process {

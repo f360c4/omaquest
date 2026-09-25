@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] — 2026-09-24
+
+### Fixed
+- **The state directory was world-readable.** With a default umask it came out
+  `0755` with `0644` files, so on a machine with more than one account anybody
+  with a login could read the chronicle — which records the names of programs
+  that crashed on the machine, and when. It is `0700` now, made private when
+  created and made private again on every start, so installs that predate this
+  are repaired rather than left behind. The save and the chronicle are `0600`.
+
+  Reported by a marketplace maintainer on the listing submission.
+
 ## [0.2.0] — 2026-09-24
 
 ### Added
