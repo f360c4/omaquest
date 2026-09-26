@@ -4,6 +4,30 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] — 2026-09-26
+
+### Fixed
+- **The permissions were set and never checked.** `mkdir` and both `chmod`s
+  ran and the plugin carried on regardless of what they answered, so a
+  directory that could not be made private — owned by somebody else, on a
+  filesystem that does not carry permissions, an immutable bit — still had a
+  chronicle of what crashed on this machine written into it, while the README
+  promised the opposite.
+
+  The mode is now read back with `stat` rather than inferred from an exit
+  status, which is the weaker thing to ask: an exit status says the command
+  believed it worked. Nothing is written to disk until the directory is
+  observed to be `0700`, the panel says so where it cannot be missed, and the
+  check runs again on every start so repairing it by hand picks straight back
+  up.
+
+  Found in review by a marketplace maintainer, on the fix for the previous
+  finding.
+- The Bard's directory is tightened on its own rather than in the same
+  `chmod` as the state directory. It usually does not exist, so that command
+  reported failure on an ordinary start — which would have taught any check on
+  the exit status to cry wolf.
+
 ## [0.2.2] — 2026-09-24
 
 ### Changed

@@ -428,5 +428,6 @@
   "weapon.noun.bard": "Alaúde",
   "weapon.noun.druid": "Foice",
   "weapon.noun.mage": "Cajado",
-  "weapon.noun.archer": "Arco"
+  "weapon.noun.archer": "Arco",
+  "ui.state_not_private": "Nada está sendo salvo. Não foi possível deixar {dir} privado, e a crônica registra o que rodou nesta máquina — então ela não está sendo escrita onde outras contas poderiam ler. Rode  chmod 700 {dir}  num terminal e abra este painel de novo."
 }

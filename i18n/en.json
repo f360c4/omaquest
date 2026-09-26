@@ -428,5 +428,6 @@
   "weapon.noun.bard": "Lute",
   "weapon.noun.druid": "Sickle",
   "weapon.noun.mage": "Staff",
-  "weapon.noun.archer": "Bow"
+  "weapon.noun.archer": "Bow",
+  "ui.state_not_private": "Nothing is being saved. {dir} could not be made private, and the chronicle records what ran on this machine, so it is not being written where other accounts could read it. Run  chmod 700 {dir}  in a terminal and reopen this panel."
 }

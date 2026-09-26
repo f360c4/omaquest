@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "f360c4.omaquest",
   "name": "Omaquest",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "Luiz Felipe - F360c4",
   "license": "MIT",
   "description": "An offline RPG in the Omarchy bar. Your machine is the realm: workspaces, windows, music, rest and crashes become the hero's chronicle. Fight in the arena, send expeditions, forge gear. Pick a race and a class. No network, no grind, never interrupts.",

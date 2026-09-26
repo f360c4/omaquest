@@ -179,6 +179,35 @@ Panel {
             }
           }
 
+          // Said out loud, and above everything, because the alternative is a
+          // game that quietly stops saving and a player who finds out when
+          // their hero is a day younger than they left it.
+          Rectangle {
+            width: parent.width
+            visible: !!root.game && root.game.stateChecked === true
+              && root.game.stateSecure === false
+            height: visible ? warning.implicitHeight + Style.space(16) : 0
+            radius: Style.cornerRadius
+            color: Qt.rgba(Color.urgent.r, Color.urgent.g, Color.urgent.b, 0.14)
+            border.width: 1
+            border.color: Color.urgent
+
+            Text {
+              id: warning
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              anchors.margins: Style.space(8)
+              wrapMode: Text.WordWrap
+              textFormat: Text.PlainText
+              text: root.t("ui.state_not_private", { dir: root.game ? root.game.stateDir : "" })
+              color: root.contentForeground
+              font.family: root.contentFontFamily
+              font.pixelSize: Style.font.caption
+              renderType: Text.NativeRendering
+            }
+          }
+
           TabBar {
             width: parent.width
             visible: root.serviceReady && root.hasHero

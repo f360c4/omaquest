@@ -153,6 +153,22 @@ else
   fail "the state directory is not made 0700"
 fi
 
+# And the result is read back rather than assumed. Firing chmod and not
+# looking is how the first version of this passed its own checklist while
+# leaving the chronicle readable whenever the chmod could not run.
+if grep -q '"stat", "-c", "%a"' Service.qml && grep -q 'stateSecure' Service.qml; then
+  pass "the directory's mode is read back, not assumed"
+else
+  fail "nothing verifies the state directory actually came out private"
+fi
+
+# A refusal that only logs is a game that silently stops saving.
+if grep -q 'if (!root.stateSecure) return' Service.qml; then
+  pass "nothing is written while the directory is not private"
+else
+  fail "state is written without checking the directory is private"
+fi
+
 if grep -q '"chmod", "600"' Service.qml; then
   pass "the save and the chronicle are made 0600"
 else

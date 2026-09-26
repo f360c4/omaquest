@@ -300,6 +300,12 @@ Item {
 
   function persist() {
     if (!root.world || root.loading) return
+
+    // Nothing goes to disk until the directory holding it is known to be
+    // private. Checked again on every start, so repairing it by hand — or
+    // removing whatever stopped the chmod — picks straight back up.
+    if (!root.stateSecure) return
+
     saveFile.setText(JSON.stringify(root.world, null, 2) + "\n")
     if (root.chronicleDirty) {
       chronicleFile.setText(JSON.stringify({ version: Rules.SCHEMA_VERSION, entries: root.chronicle }) + "\n")
@@ -350,16 +356,49 @@ Item {
   // that predates this still has the old one. Said again, unconditionally.
   Process {
     id: tightenDir
-    // The Bard's directory too, when there is one. `chmod` does each argument
-    // it can and complains about the rest, which is why the complaint is
-    // collected and dropped.
-    command: ["chmod", "700", root.stateDir, root.bardDir]
+    command: ["chmod", "700", root.stateDir]
     stderr: StdioCollector {}
-    onExited: {
-      // Files from an earlier session exist right now, so fix them here. On a
-      // brand new install there is nothing yet, and the pass after the first
-      // write below is the one that catches it.
-      tightenFiles.running = true
+    onExited: tightenBard.running = true
+  }
+
+  // The Bard's directory, separately and on a best-effort footing, because it
+  // usually does not exist — folding it into the line above meant that command
+  // reported failure on an ordinary start, which is how a check on the exit
+  // status would have learned to cry wolf.
+  Process {
+    id: tightenBard
+    command: ["chmod", "700", root.bardDir]
+    stderr: StdioCollector {}
+    onExited: checkDir.running = true
+  }
+
+  // And then look, rather than assume.
+  //
+  // `mkdir` and both `chmod`s can fail — a directory owned by somebody else, a
+  // filesystem that does not carry permissions, an immutable bit — and firing
+  // them without reading the answer left the plugin writing a chronicle of
+  // what crashed on this machine into a directory anybody could walk into,
+  // while the README promised otherwise.
+  //
+  // The exit status is the weaker thing to check: it says the command believed
+  // it worked. This asks the filesystem what the mode actually is, which is
+  // the thing the promise is about.
+  property bool stateSecure: false
+  property bool stateChecked: false
+
+  Process {
+    id: checkDir
+    command: ["stat", "-c", "%a", root.stateDir]
+    stdout: StdioCollector { id: dirMode }
+    onExited: function (exitCode) {
+      root.stateSecure = exitCode === 0 && String(dirMode.text).trim() === "700"
+      root.stateChecked = true
+      if (!root.stateSecure)
+        console.warn("omaquest: " + root.stateDir + " is not private (mode "
+          + String(dirMode.text).trim() + "); refusing to write state")
+
+      // Reading is still fine and the hero should still be there to look at.
+      // It is writing that would put private things somewhere open.
       saveReader.running = true
     }
   }
